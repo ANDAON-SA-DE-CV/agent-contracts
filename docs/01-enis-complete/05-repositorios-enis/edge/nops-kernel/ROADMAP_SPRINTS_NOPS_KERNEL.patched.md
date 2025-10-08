@@ -46,6 +46,17 @@
 - **S9-P3**: Trust Negotiation
 
 ## S10 — GA Fix Packs & Evolution
+
+#### S10-P11 — **SEC v1 (Firmas + SBOM + Verificación de Arranque)**
+- Firmado de imágenes/artefactos (cosign/sigstore o Notary v2).
+- Generación de **SBOM** (Syft) + **attestations** (SLSA).
+- Verificación de firma y **hash-bundle** en startup, con **reporte al Audit Trail**.
+- **CI Gate**: bloquear merge si falta SBOM/attestation.
+
+#### S10-P12 — **OTel Traces + Logs (Jaeger + ELK/Vector)**
+- Habilitar **OTLP** en todos los servicios (metrics, traces, logs).
+- Trazas end‑to‑end para `/inference` con correlación `request-id`.
+- Dashboards y alertas base (latencia p95/p99, error rate, saturación).
 - **S10-P1**: Live Contract
 - **S10-P2**: Security Headers Fix
 - **S10-P3**: OpenAPI Hygiene
@@ -67,6 +78,11 @@
   - Objetivo E2E <500 ms p95 caso simple, timeouts/retries con jitter, CB por servicio, "straggler test" (10 s)
 
 ## S11 — Agent SDK Touchpoints
+
+#### S11-P5 — **ZAG Client Hooks (SDK)**
+- Registro/heartbeat del agente, **rotación de API keys**.
+- Firma **HMAC** de webhooks, **backoff/retry con jitter**, **idempotency keys**.
+- Métricas OTel de cliente (latencia/errores) y hooks de billing.
 - **S11-P1**: API Keys Rotation + Grace
 - **S11-P2**: SDK Python (register, heartbeat, metrics, rotate)
 - **S11-P3**: TTL/Zombie Cleanup ✅
@@ -92,55 +108,51 @@
   - Documentación y ejemplos completos
 
 ## S12 — Federation Bus + E2E
+
+#### S12-P5 — **Contract Tests + Chaos básico entre Kernels**
+- Test de contratos federados, degradación controlada y **latency/partition games**.
 - **S12-P1**: Federation Bus Core
 - **S12-P2**: Cross-Agent Proof Exchange
 - **S12-P3**: Multi-tenant Contracts
 - **S12-P4**: Federation Governance
 
 ## S13 — Security Hardening
+
+#### S13-P4 — **Secure Sandbox Execution v1**
+- Aislamiento con **seccomp/apparmor**, **cgroups** y límites de CPU/Mem/Time.
+- **Policy engine** de ejecución y **audit hooks** ante violaciones.
+
+#### S13-P5 — **Resource Governance v1**
+- **Cuotas** por tenant/agent, **fair‑share** y **SLA‑aware scheduling**.
+- Exposición de métricas para **billing** y control de costos.
 - **S13-P1**: mTLS Everywhere
 - **S13-P2**: Secrets Rotation
 - **S13-P3**: Compliance Audit Trails
 
-## S13.5 — SEC (Signed Execution Contract) - Supply Chain Integrity
-- **S13.5-P1**: Binary Signing Infrastructure
-  - Implementar firma criptográfica de todos los artefactos ejecutables (binarios, contenedores, módulos)
-  - Infraestructura de claves (HSM/KMS) para signing keys
-  - Pipeline CI/CD integrado con signing automático
-  - Metadata de firma (timestamp, versión, build ID, hash)
-- **S13.5-P2**: Runtime Signature Verification
-  - Validación de firmas en tiempo de arranque del NOPS Kernel
-  - Validación de firmas en carga de Edge Agents
-  - Verificación de hash del binario y bundle de dependencias
-  - Whitelist de signing certificates por entorno (dev/staging/prod)
-- **S13.5-P3**: Supply Chain Integrity
-  - Hash-chain de versiones de artefactos
-  - Validación de integridad de dependencias (SBOM - Software Bill of Materials)
-  - Verificación de provenance (origen del build)
-  - Registry de artefactos firmados con control de acceso
-- **S13.5-P4**: SEC Audit Trail & Enforcement
-  - Logging estructurado de todas las validaciones SEC
-  - Audit trail inmutable de violaciones SEC en Compliance Module
-  - Enforcement policies por tier (🟤🟡🟢=warning, 🔵🔴=block)
-  - Métricas Prometheus de SEC (validaciones, violaciones, latencia)
-  - Alertas automáticas en violaciones críticas
-- **S13.5-P5**: SEC Documentation & Compliance
-  - Documentación de políticas SEC por tier
-  - Procedimientos de rotación de signing keys
-  - Matriz de compliance SEC vs regulaciones (SOC2, GDPR, etc.)
-  - Runbooks de respuesta a violaciones SEC
-
 ## S14 — Pre-GA Gate
+
+> **Gate adicional:** `openapi-diff` + verificación de **SEC attestations** obligatorias antes de GA.
 - **S14-P1**: CI/CD Release Gate
-- **S14-P2**: DNA Compliance Validation (✅ Requiere S13.5 completado)
+- **S14-P2**: DNA Compliance Validation
 - **S14-P3**: Docs Freeze
 
 ## S15 — Gateway & Advanced Security
+
+### S15-P0 — **Zero Agent Gateway v1 (CRITICAL)**
+- Validación → **firma HMAC** → **rate‑limit por tenant** → routing inteligente.
+- **OTel** completo (metrics/logs/traces) + hooks de **billing** y seguridad.
+- Protección contra **replay** (timestamp + nonce) y pruebas **DoS**.
+
+#### S15-P4 — **WAF/DDoS + mTLS Termination (Enterprise)**
+- Reglas WAF base, terminación **mTLS** interna y **key rotation** automatizada.
 - **S15-P1**: API Gateway Template
 - **S15-P2**: WAF & DDoS Mitigation
 - **S15-P3**: JWT/OIDC Federation
 
 ## S16 — ZKP Engine
+
+#### S16-P4 — **Audit Trail Forensics**
+- **Hash‑chain receipts**, export compliance y evidencias para reguladores.
 - **S16-P1**: Proof Library
 - **S16-P2**: Proof Exchange
 - **S16-P3**: Compliance Proofs
@@ -230,8 +242,7 @@ Dependencias: S21-P1, S21-P2
 
 #### **🔒 SEGURIDAD AVANZADA (S13-S15) - PENDIENTE**
 - **S13** ⏳ **Security Hardening** - mTLS Everywhere, Secrets Rotation, Compliance Audit
-- **S13.5** ⏳ **SEC (Signed Execution Contract)** - Supply Chain Integrity (⚠️ CRÍTICO para S14)
-- **S14** ⏳ **Pre-GA Gate** - CI/CD Release Gate, DNA Compliance Validation (requiere S13.5)
+- **S14** ⏳ **Pre-GA Gate** - CI/CD Release Gate, DNA Compliance Validation
 - **S15** ⏳ **Gateway & Advanced Security** - API Gateway Template, WAF & DDoS
 
 #### **🚀 FUNCIONALIDADES AVANZADAS (S16-S21) - PENDIENTE**
@@ -295,3 +306,10 @@ El NOPS Kernel **YA PUEDE**:
 3. **Federación**: S12 (Federation Bus avanzado)
 4. **SDKs**: S11 (Agent SDK Touchpoints)
 5. **Funcionalidades Avanzadas**: S16-S21 (ZKP, Blockchain, MCP)
+
+## S22 — **Air‑Gapped Bootstrap (Nuevo bloque)**
+**Objetivo:** despliegue totalmente offline con arranque confiable y verificación SEC.
+
+- **S22-P1:** Provisioning offline + **trust bundles**.
+- **S22-P2:** **Rotación offline** de llaves/secretos + actualización segura.
+- **S22-P3:** Validación **SEC** offline + auditoría y evidencias.

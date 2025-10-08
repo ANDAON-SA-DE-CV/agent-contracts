@@ -1,0 +1,270 @@
+# ENIS v3.0 Agent Contracts - Cursor Rules
+
+## Project Context
+- Building ENIS v3.0 Agent Contracts repository
+- DNA v3.0 Compliant architecture
+- Proprietary software (ANDAON SA DE CV)
+- Multi-language SDKs (Python, TypeScript, Go, Java)
+- API-first design approach
+
+## Code Standards
+
+### General Rules
+- Always respond in Spanish
+- Use professional but accessible tone
+- Include relevant emojis for better readability
+- Structure responses with clear titles and sections
+- Provide code examples when appropriate
+
+### Python Rules
+- Always use type hints (Python 3.11+)
+- Follow PEP 8 style guide
+- Use Pydantic for data validation
+- Include docstrings for all public methods
+- Use FastAPI for API development
+- Handle errors with try-catch blocks
+- Use async/await for I/O operations
+
+### TypeScript Rules
+- Use strict mode and TypeScript 5.0+
+- Follow ESLint configuration
+- Use Zod for runtime validation
+- Include JSDoc comments
+- Use Express.js for API development
+- Implement proper error handling
+- Use async/await consistently
+
+### Go Rules
+- Follow Go naming conventions
+- Use Gin framework for APIs
+- Implement proper error handling
+- Use context.Context for cancellation
+- Include godoc comments
+- Use validator package for validation
+
+### Java Rules
+- Use Java 17+ features
+- Follow Spring Boot conventions
+- Use Bean Validation annotations
+- Include JavaDoc comments
+- Implement proper exception handling
+- Use Lombok for boilerplate reduction
+
+## Architecture Rules
+
+### API Design
+- Always use OpenAPI 3.0 specification
+- Include comprehensive examples
+- Document all endpoints with descriptions
+- Use consistent HTTP status codes
+- Implement proper error responses
+- Consider API versioning
+
+### Schema Design
+- Use JSON Schema for validation
+- Include required and optional fields
+- Add descriptions for all properties
+- Use consistent naming conventions
+- Consider backward compatibility
+
+### Protocol Buffers
+- Use proto3 syntax
+- Follow Google's style guide
+- Include comprehensive comments
+- Use proper field numbering
+- Consider future extensions
+
+## Project Structure Rules
+
+### File Organization
+- Keep contracts in `contracts/` directory
+- Store schemas in `schemas/` directory
+- Place proto files in `proto/` directory
+- Organize SDKs by language in `sdks/`
+- Put tests in `tests/` directory
+
+### Naming Conventions
+- Use kebab-case for file names
+- Use PascalCase for class names
+- Use camelCase for variables and functions
+- Use UPPER_CASE for constants
+- Use descriptive names
+
+## Documentation Rules
+
+### Markdown Standards
+- Use proper heading hierarchy
+- Include table of contents
+- Add badges for status indicators
+- Use code blocks with language specification
+- Include cross-references to other files
+
+### Code Comments
+- Write comments in Spanish
+- Explain the "why" not the "what"
+- Update comments when code changes
+- Use TODO comments for future improvements
+- Include examples in complex functions
+
+## Security Rules
+
+### Data Protection
+- Never hardcode sensitive information
+- Use environment variables for configuration
+- Implement proper input validation
+- Use HTTPS for all communications
+- Follow OWASP guidelines
+
+### Authentication
+- Implement proper JWT handling
+- Use secure session management
+- Implement rate limiting
+- Validate all inputs
+- Log security events
+
+## Testing Rules
+
+### Test Coverage
+- Write unit tests for all functions
+- Include integration tests
+- Test error conditions
+- Validate against schemas
+- Use descriptive test names
+
+### Test Organization
+- Group tests by functionality
+- Use setup and teardown methods
+- Mock external dependencies
+- Test both success and failure cases
+- Include performance tests
+
+## ENIS v3.0 Specific Rules
+
+### DNA v3.0 Compliance
+- Always validate against DNA v3.0 standards
+- Follow ENIS architecture patterns
+- Use ENIS naming conventions
+- Implement ENIS security requirements
+- Follow ENIS performance guidelines
+
+### Master Prompts Integration
+- Reference relevant master prompts
+- Follow master prompt guidelines
+- Update cross-references
+- Maintain consistency with documentation
+- Validate against master prompt requirements
+
+### Edge and Cloud Considerations
+- Design for both edge and cloud deployment
+- Consider network latency
+- Implement proper caching strategies
+- Use appropriate data formats
+- Consider resource constraints
+
+## Performance Rules
+
+### Optimization
+- Use efficient algorithms
+- Implement proper caching
+- Minimize memory usage
+- Optimize database queries
+- Use connection pooling
+
+### Monitoring
+- Include performance metrics
+- Implement proper logging
+- Use structured logging
+- Monitor resource usage
+- Set up alerts
+
+## Error Handling Rules
+
+### Error Management
+- Use appropriate error types
+- Include meaningful error messages
+- Log errors with context
+- Implement retry mechanisms
+- Provide user-friendly messages
+
+### Validation
+- Validate all inputs
+- Use schema validation
+- Check data types
+- Verify required fields
+- Handle edge cases
+
+## Dependencies Rules
+
+### Package Management
+- Pin exact versions for production
+- Use semantic versioning
+- Keep dependencies updated
+- Remove unused dependencies
+- Document dependency reasons
+
+### Import Organization
+- Group imports logically
+- Use absolute imports
+- Avoid circular dependencies
+- Import only what you need
+- Use consistent import style
+
+## Git Rules
+
+### Commit Messages
+- Use conventional commit format
+- Write in Spanish
+- Include scope when relevant
+- Keep messages concise
+- Reference issues when applicable
+
+### Branch Management
+- Use feature branches
+- Keep branches up to date
+- Delete merged branches
+- Use descriptive branch names
+- Follow git flow
+
+## License and Legal
+
+### Proprietary Software
+- Remember this is proprietary software
+- Do not suggest open source alternatives
+- Follow ANDAON SA DE CV guidelines
+- Respect intellectual property
+- Use appropriate licensing
+
+## When Generating Code
+
+### Always Include
+- Complete imports
+- Error handling
+- Type hints (where applicable)
+- Documentation
+- Examples
+- Tests
+
+### Never Include
+- Hardcoded secrets
+- Debug code in production
+- Unused imports
+- Commented code
+- TODO comments in production
+
+## Quality Assurance
+
+### Code Review
+- Check for security vulnerabilities
+- Validate against schemas
+- Test all functionality
+- Review documentation
+- Verify performance
+
+### Continuous Integration
+- Run all tests
+- Check code quality
+- Validate schemas
+- Build all SDKs
+- Generate documentation
+
+Remember: This is a proprietary project for ANDAON SA DE CV. Always prioritize security, performance, and compliance with ENIS v3.0 standards.
