@@ -1076,6 +1076,25 @@ security_framework:
       - "License compliance"
       - "Security updates automáticos"
       
+  supply_chain_security:
+    sbom_generation:
+      - "Syft para generar SBOM de SDKs"
+      - "CycloneDX format estándar"
+      - "Dependency tree completo"
+      - "Vulnerability mapping"
+      
+    artifact_signing:
+      - "Cosign para firmar artefactos"
+      - "Sigstore integration"
+      - "Verificación de integridad"
+      - "Chain of trust"
+      
+    verification_pipeline:
+      - "Verificar firmas antes de publicar"
+      - "Validar checksums"
+      - "Reject unsigned artifacts"
+      - "Audit trail de verificaciones"
+      
   compliance_frameworks:
     data_privacy:
       - "GDPR compliance"
@@ -1094,6 +1113,8 @@ security_framework:
       - "SDK generation logs"
       - "Validation results"
       - "Compliance reports"
+      - "SBOM audit trail"
+      - "Signature verification logs"
 ```
 
 ### Niveles de Certificación
@@ -1195,6 +1216,136 @@ performance_targets:
     storage_iops: "< 30%"
 ```
 
+## 📋 **VERSIONING & DEPRECATION POLICY**
+
+### **Semantic Versioning Strategy**
+
+```yaml
+versioning_strategy:
+  semantic_versioning:
+    major_changes:
+      - "Eliminar endpoint o parámetro requerido"
+      - "Cambiar tipo de campo o estructura"
+      - "Modificar códigos de respuesta"
+      - "Breaking changes en autenticación"
+      
+    minor_changes:
+      - "Agregar nuevo endpoint"
+      - "Agregar campo opcional"
+      - "Nuevas características backward compatible"
+      - "Mejoras de performance"
+      
+    patch_changes:
+      - "Bug fixes"
+      - "Correcciones de documentación"
+      - "Mejoras de validación"
+      - "Actualizaciones de ejemplos"
+      
+  deprecation_lifecycle:
+    notice_period: "6 meses"
+    sunset_period: "12 meses"
+    communication:
+      - "GitHub issue con label 'deprecation'"
+      - "Sunset header en respuestas"
+      - "Notificación en changelog"
+      - "Email a equipos afectados"
+      
+  migration_support:
+    - "Migration guides detallados"
+    - "Code examples de migración"
+    - "Automated migration tools"
+    - "Dedicated support team"
+```
+
+### **Compatibility Matrix Format**
+
+```yaml
+compatibility_matrix:
+  format: "YAML estándar"
+  required_fields:
+    - "contract: nombre del contrato"
+    - "version: versión actual"
+    - "endpoints: lista de endpoints"
+    - "breaking_level: none|minor|major"
+    - "impacted_sdks: lista de SDKs afectados"
+    - "migration_notes: guía de migración"
+    
+  example:
+    contract: "inference.yaml"
+    version: "v1.3.0"
+    endpoints:
+      - path: "/v1/inference/predict"
+        request_sig: "blake2b:abc123..."
+        response_sig: "blake2b:def456..."
+        breaking_level: "minor"
+        impacted_sdks: ["py", "ts", "go", "java", "dotnet"]
+        migration_notes: "Nuevo campo opcional 'stream' agregado"
+```
+
+### **Breaking Change Detection Tools**
+
+```yaml
+breaking_change_tools:
+  openapi:
+    tool: "oasdiff"
+    command: "oasdiff breaking --fail-on breaking"
+    threshold: "0 breaking changes allowed"
+    
+  protobuf:
+    tool: "buf breaking"
+    command: "buf breaking --against main"
+    threshold: "0 breaking changes allowed"
+    
+  json_schema:
+    tool: "ajv-diff"
+    command: "ajv-diff old.json new.json"
+    severity_levels: ["error", "warning", "info"]
+    
+  typescript:
+    tool: "tsc"
+    command: "tsc --noEmit --strict"
+    threshold: "0 type errors allowed"
+    note: "Compila contra tipos generados desde OpenAPI/SDK para capturar rupturas reales"
+```
+
+### **Governance & RACI**
+
+```yaml
+governance:
+  raci_matrix:
+    contract_owner: "Architect Team"
+    - "Define contract changes"
+    - "Approve breaking changes"
+    - "Review migration plans"
+    
+    sdk_teams: "Development Teams"
+    - "Implement SDK changes"
+    - "Test compatibility"
+    - "Update documentation"
+    
+    qa_team: "Quality Assurance"
+    - "Validate contract compliance"
+    - "Test migration scenarios"
+    - "Verify backward compatibility"
+    
+    stakeholders: "Business Teams"
+    - "Approve major changes"
+    - "Review business impact"
+    - "Communicate to users"
+    
+  rfc_process:
+    template: "docs/governance/rfc/000-template.md"
+    states: ["draft", "review", "approved", "implemented", "deprecated"]
+    sla_review: "72 horas"
+    sla_approval: "1 semana"
+    
+  change_approval:
+    patch_changes: "Automated approval"
+    minor_changes: "Architect review required"
+    major_changes: "Stakeholder approval required"
+    deprecations: "Business approval required"
+```
+
 ## 🔄 USER FEEDBACK LOOP
 
 ### Sistema de Feedback Continuo
@@ -1232,6 +1383,303 @@ feedback_system:
     community_voting: "Features prioritizados"
 ```
 
+## 📊 **OBSERVABILIDAD DE CONTRATOS**
+
+### **Métricas Exportadas**
+
+```yaml
+contract_metrics:
+  validation_metrics:
+    - "contracts_validation_duration_seconds"
+    - "contracts_validation_total{status=success|failure}"
+    - "contracts_validation_errors_total{error_type}"
+    - "contracts_schema_validation_duration_seconds"
+    
+  breaking_changes_metrics:
+    - "breaking_changes_detected_total{severity=minor|major}"
+    - "breaking_changes_by_service_total{service_name}"
+    - "breaking_changes_resolution_time_seconds"
+    - "breaking_changes_impact_score"
+    
+  sdk_generation_metrics:
+    - "sdk_generation_duration_seconds{language}"
+    - "sdk_generation_success_total{language}"
+    - "sdk_generation_failures_total{language,error_type}"
+    - "sdk_compilation_errors_total{language}"
+    
+  compatibility_metrics:
+    - "compatibility_check_duration_seconds"
+    - "compatibility_violations_total{service,version}"
+    - "migration_success_rate{from_version,to_version}"
+    - "deprecated_endpoint_usage_total{endpoint}"
+    
+  performance_metrics:
+    - "contract_validation_latency_p50"
+    - "contract_validation_latency_p95"
+    - "contract_validation_latency_p99"
+    - "sdk_generation_throughput{language}"
+```
+
+### **SLOs y Alertas**
+
+```yaml
+contract_slos:
+  validation_slo:
+    target: "99.9% success rate"
+    window: "5 minutos"
+    alert_threshold: "< 99%"
+    
+  breaking_changes_slo:
+    target: "0 breaking changes en main"
+    window: "1 hora"
+    alert_threshold: "> 0"
+    
+  sdk_generation_slo:
+    target: "95% success rate"
+    window: "1 hora"
+    alert_threshold: "< 90%"
+    
+  compatibility_slo:
+    target: "100% backward compatibility"
+    window: "24 horas"
+    alert_threshold: "< 100%"
+    
+  performance_slo:
+    validation_latency: "< 100ms p95"
+    sdk_generation: "< 60s p95"
+    compatibility_check: "< 200ms p95"
+    
+  alerting_rules:
+    critical:
+      - "Breaking changes detected"
+      - "SDK generation failing"
+      - "Validation service down"
+      
+    warning:
+      - "High validation latency"
+      - "Deprecated endpoint usage > 10%"
+      - "Compatibility check slow"
+      
+    info:
+      - "New contract version released"
+      - "Migration completed"
+      - "Performance improvement"
+```
+
+### **Dashboards y Monitoreo**
+
+```yaml
+monitoring_dashboards:
+  contracts_overview:
+    - "Validation success rate"
+    - "Breaking changes timeline"
+    - "SDK generation status"
+    - "Compatibility matrix"
+    
+  performance_dashboard:
+    - "Validation latency trends"
+    - "SDK generation duration"
+    - "Error rates by service"
+    - "Throughput metrics"
+    
+  governance_dashboard:
+    - "RFC status tracking"
+    - "Approval timelines"
+    - "Migration progress"
+    - "Deprecation timeline"
+    
+  business_metrics:
+    - "Contract adoption rate"
+    - "SDK download statistics"
+    - "Developer satisfaction"
+    - "Support ticket volume"
+```
+
+### **Logging y Tracing**
+
+```yaml
+logging_strategy:
+  structured_logging:
+    format: "JSON"
+    fields:
+      - "timestamp"
+      - "level"
+      - "service"
+      - "operation"
+      - "correlation_id"
+      - "user_id"
+      - "duration_ms"
+      - "status_code"
+      - "error_message"
+      
+  log_levels:
+    debug: "Development only"
+    info: "Normal operations"
+    warn: "Deprecation notices"
+    error: "Validation failures"
+    fatal: "System failures"
+    
+  tracing:
+    correlation_id: "UUID único por request"
+    span_id: "UUID único por operación"
+    parent_span_id: "Para operaciones anidadas"
+    trace_context: "Propagación entre servicios"
+    
+  retention:
+    debug_logs: "7 días"
+    info_logs: "30 días"
+    error_logs: "90 días"
+    audit_logs: "1 año"
+```
+
+## 🔒 **BASELINE Y EVIDENCIAS**
+
+### **Baseline de Contratos**
+
+```yaml
+baseline_strategy:
+  location: "docs/.baseline/"
+  contents:
+    - "compatibility-matrix.yaml (firmada)"
+    - "contracts-sbom.json (firmado)"
+    - "specs.b2 (hashes BLAKE2b)"
+    - "sdk-artifacts.sig (firmas)"
+    
+  hash_verification:
+    algorithm: "BLAKE2b"
+    files:
+      - "contracts/openapi/v1/*.yaml"
+      - "schemas/*.json"
+      - "proto/*.proto"
+      - "typescript/*.ts"
+    
+  signature_verification:
+    tool: "cosign"
+    keys: "ENIS_SIGNING_KEY"
+    verification: "Pre-merge gate"
+    
+  change_detection:
+    - "Hash change without SemVer bump → block merge"
+    - "Signature verification failure → block merge"
+    - "Baseline drift → alert + review required"
+```
+
+### **Script de Validación de Cross-References**
+
+```python
+# scripts/validate-xrefs.py
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+refs = []
+
+def validate_cross_references():
+    """Validate all cross-references in documentation"""
+    # Find all reference patterns
+    for p in ROOT.rglob("*.md"):
+        for m in re.finditer(r'reference:\s*"([^"]+)"', p.read_text(encoding="utf-8")):
+            refs.append((p, m.group(1)))
+    
+    errors = []
+    
+    for src, ref in refs:
+        file, _, anchor = ref.partition("#")
+        tgt = (ROOT / file.lstrip("/")).resolve()
+        
+        if not tgt.exists():
+            errors.append(f"[XREF] Missing file: {ref} (from {src})")
+            continue
+            
+        if anchor and (f"#{anchor.lower()}" not in tgt.read_text(encoding="utf-8").lower()):
+            errors.append(f"[XREF] Missing anchor: {ref} (from {src})")
+    
+    if errors:
+        print("\n".join(errors))
+        sys.exit(1)
+    
+    print("✅ All cross-references valid")
+
+if __name__ == "__main__":
+    validate_cross_references()
+```
+
+### **Política de Congelamiento**
+
+```yaml
+freeze_policy:
+  freeze_period: "72 horas antes del release"
+  freeze_criteria:
+    - "Solo patch y minor changes permitidos"
+    - "Major changes se reprograman"
+    - "Breaking changes bloqueados"
+    - "Hotfixes críticos con approval especial"
+    
+  freeze_notification:
+    - "GitHub issue con label 'freeze'"
+    - "Slack announcement"
+    - "Email a development teams"
+    - "Calendar reminder"
+    
+  freeze_override:
+    - "Security vulnerabilities (CVE)"
+    - "Production incidents"
+    - "Critical business requirements"
+    - "Requires CTO approval"
+    
+  release_calendar:
+    - "Freeze starts: Lunes 9:00 AM"
+    - "Release cut: Jueves 9:00 AM"
+    - "Deployment: Jueves 2:00 PM"
+    - "Monitoring: 24/7 por 48 horas"
+```
+
+### **Runtime Conformance Testing**
+
+```yaml
+conformance_testing:
+  tools:
+    schemathesis:
+      - "OpenAPI contract testing"
+      - "Property-based testing"
+      - "Fuzz testing de endpoints"
+      - "Response schema validation"
+      
+    pact:
+      - "Consumer-driven contracts"
+      - "Provider verification"
+      - "Compatibility testing"
+      - "Version compatibility matrix"
+      
+  test_environments:
+    mock:
+      - "WireMock para OpenAPI"
+      - "Mockito para Protocol Buffers"
+      - "JSON Schema validators"
+      
+    dev:
+      - "Real service instances"
+      - "Integration testing"
+      - "End-to-end validation"
+      - "Performance testing"
+      
+  conformance_gates:
+    - "Schema compliance: 100%"
+    - "Response validation: 100%"
+    - "Error handling: 100%"
+    - "Performance SLOs: 95%"
+    
+  execution_commands:
+    schemathesis:
+      - "schemathesis run --checks all --workers auto http://SERVICE/openapi.json"
+      - "schemathesis run --checks all --workers auto --base-url http://localhost:8000 contracts/openapi/v1/inference.yaml"
+      
+    pact:
+      - "pact-verifier --provider-base-url=http://SERVICE --pact-url=pacts/consumer-provider.json"
+      - "pact-broker publish pacts/ --consumer-app-version=1.0.0 --broker-base-url=http://pact-broker"
+```
+
 ## 🚀 SECUENCIA DE GENERACIÓN
 
 ### Fases de Generación con Porcentajes
@@ -1262,7 +1710,7 @@ feedback_system:
 
 ## ✅ QUALITY GATES - CHECKLIST FINAL
 
-### Checklist de Validación Simple y Directo
+### Checklist de Validación Avanzado
 
 ```yaml
 contract_validation:
@@ -1270,24 +1718,56 @@ contract_validation:
   - [ ] JSON Schema validation
   - [ ] Protocol Buffers definition
   - [ ] TypeScript types complete
-  - [ ] Breaking change detection
-  - [ ] Compatibility matrix
+  - [ ] Breaking change detection (oasdiff, buf, ajv-diff)
+  - [ ] Compatibility matrix generada
+  - [ ] Spectral linting passed (custom .spectral.yaml)
+  - [ ] API Style Guide compliance
+  - [ ] Cross-references validation (validate-xrefs.py)
+  - [ ] BLAKE2b hashes computed
+  - [ ] Baseline artifacts generated
   
 sdk_validation:
-  - [ ] 5 SDKs generados
+  - [ ] 5 SDKs generados (Python, TypeScript, Go, Java, .NET)
   - [ ] Code examples ejecutables
   - [ ] Type safety validado
   - [ ] Performance benchmarks
-  - [ ] Security scanning
+  - [ ] Security scanning (Trivy)
   - [ ] Documentation complete
+  - [ ] SBOM generado
+  - [ ] Artifacts firmados (Cosign)
+  - [ ] Golden tests passed (compilation + smoke tests)
+  - [ ] Tool versions pinned (tools/versions.json)
+  - [ ] Deterministic generation verified
   
 integration_validation:
   - [ ] Service integration tested
   - [ ] Cross-references funcionales
-  - [ ] CI/CD pipeline
-  - [ ] Monitoring setup
+  - [ ] CI/CD pipeline completo
+  - [ ] Monitoring setup (métricas exportadas)
   - [ ] Troubleshooting guides
-  - [ ] Migration paths
+  - [ ] Migration paths documentados
+  - [ ] Governance process (RACI, RFC)
+  - [ ] Observabilidad configurada
+  
+security_validation:
+  - [ ] Supply chain security (SBOM)
+  - [ ] Artifact signing (Cosign)
+  - [ ] Vulnerability scanning
+  - [ ] Dependency audit
+  - [ ] License compliance
+  - [ ] Security headers validados
+  
+governance_validation:
+  - [ ] Versioning policy implementada
+  - [ ] Deprecation process definido
+  - [ ] RACI matrix establecida
+  - [ ] RFC process configurado
+  - [ ] Change approval workflow
+  - [ ] Communication channels
+  - [ ] Freeze policy configurada
+  - [ ] Baseline strategy implementada
+  - [ ] Conformance testing setup
+  - [ ] Runtime validation enabled
 ```
 
 ### Criterios de Release
@@ -1352,30 +1832,43 @@ phase_1_foundation:
   - "JSON Schema definitions"
   - "Protocol Buffers"
   - "TypeScript types"
+  - "API Style Guide"
   
 phase_2_sdks:
   - "SDK generation"
   - "Multi-language support"
   - "Code examples"
   - "Validation rules"
+  - "SBOM generation"
+  - "Artifact signing"
   
 phase_3_validation:
-  - "Breaking change detection"
+  - "Breaking change detection (oasdiff, buf, ajv-diff)"
   - "Compatibility matrix"
   - "Testing automation"
   - "Quality gates"
+  - "Security scanning"
   
-phase_4_operations:
-  - "CI/CD integration"
-  - "Monitoring setup"
-  - "Troubleshooting"
+phase_4_governance:
+  - "Versioning & deprecation policy"
+  - "RACI matrix"
+  - "RFC process"
+  - "Change approval workflow"
+  - "Communication channels"
+  
+phase_5_operations:
+  - "CI/CD integration avanzado"
+  - "Monitoring setup (métricas exportadas)"
+  - "Observabilidad completa"
+  - "Troubleshooting guides"
   - "Performance optimization"
   
-phase_5_integration_examples:
+phase_6_integration_examples:
   - "NOPS Kernel integration examples"
   - "Macro-modules integration patterns"
   - "Edge Agents real-world scenarios"
   - "End-to-end workflow documentation"
+  - "Supply chain security examples"
 ```
 
 ## 📋 METADATA DE CIERRE
@@ -1477,6 +1970,64 @@ agent-contracts/
 - **Format:** YAML (primary), JSON (generated)
 - **Validation:** Spectral rules + custom validators
 - **Documentation:** Redoc + Swagger UI
+- **Linting:** Custom .spectral.yaml con reglas ENIS
+
+### **Spectral Configuration (.spectral.yaml)**
+```yaml
+extends: ["spectral:oas"]
+rules:
+  enis-operation-id-style:
+    description: OperationId en camelCase
+    given: $.paths[*][*].operationId
+    then:
+      function: pattern
+      functionOptions: {match: "^[a-z][A-Za-z0-9]*$"}
+    severity: warn
+    
+  enis-idempotency-header:
+    description: Mutaciones deben exigir Idempotency-Key
+    given: $.paths[*].post
+    then:
+      field: requestBody
+    severity: warn
+    
+  enis-error-schema:
+    description: Respuestas 4xx/5xx deben usar error schema uniforme
+    given: $.paths[*][*].responses[?(@property >= 400)]
+    then:
+      field: content.application/json.schema.$ref
+      function: truthy
+    severity: error
+    
+  enis-pagination-cursor:
+    description: Paginación debe usar cursor-based
+    given: $.paths[*][*].parameters[?(@.name == 'page')]
+    then:
+      function: falsy
+    severity: error
+    
+  enis-correlation-id:
+    description: Headers X-Correlation-ID requeridos
+    given: $.paths[*][*]
+    then:
+      field: parameters[?(@.name == 'X-Correlation-ID')]
+      function: truthy
+    severity: warn
+```
+
+### **Tool Versions (tools/versions.json)**
+```json
+{
+  "openapi-generator-cli": "7.6.0",
+  "buf": "1.45.0",
+  "ajv-diff": "4.0.0",
+  "spectral": "6.11.0",
+  "typescript": "5.5.4",
+  "oasdiff": "1.5.0",
+  "syft": "0.108.0",
+  "cosign": "2.2.0"
+}
+```
 
 ### **JSON Schema Standards**
 - **Version:** JSON Schema Draft 7
@@ -1495,6 +2046,91 @@ agent-contracts/
 - **Module System:** ESM + CommonJS
 - **Validation:** TypeScript compiler
 - **Documentation:** TSDoc comments
+
+### **API Style Guide**
+
+```yaml
+api_style_guide:
+  naming_conventions:
+    endpoints:
+      - "kebab-case para rutas: /v1/agent-registration"
+      - "PascalCase para schemas: InferenceRequest"
+      - "camelCase para parámetros: agentId, tenantId"
+      - "UPPER_CASE para constantes: MAX_RETRIES"
+      
+  idempotency:
+    - "Idempotency-Key header requerido para operaciones mutantes"
+    - "UUID v4 para keys únicos"
+    - "Cache de 24 horas para keys"
+    - "Error 409 para keys duplicados"
+    
+  pagination:
+    - "Cursor-based pagination (limit, cursor)"
+    - "Default limit: 50, max: 1000"
+    - "Next cursor en response metadata"
+    - "Total count opcional (performance)"
+    
+  filtering_sorting:
+    - "Query parameters: ?filter=field:value&sort=field:asc"
+    - "Operadores: eq, ne, gt, gte, lt, lte, in, contains"
+    - "Sorting: field:asc|desc, múltiples campos soportados"
+    - "Case-insensitive por defecto"
+    
+  versioning:
+    - "Version en URL path: /v1/, /v2/"
+    - "Header X-API-Version para override"
+    - "Backward compatibility garantizada"
+    - "Deprecation headers: Sunset: <date>"
+    
+  error_handling:
+    - "Códigos HTTP estándar"
+    - "Error schema uniforme"
+    - "Correlation ID en todas las respuestas"
+    - "Rate limit headers: X-RateLimit-*"
+    
+  headers_required:
+    - "X-Correlation-ID: UUID para tracing"
+    - "X-Request-ID: UUID único por request"
+    - "User-Agent: Client identification"
+    - "Authorization: Bearer token o API key"
+    
+  rate_limiting:
+    - "429 Too Many Requests"
+    - "Headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset"
+    - "Retry-After header en 429"
+    - "Different limits por endpoint"
+    
+  content_types:
+    - "application/json por defecto"
+    - "application/vnd.api+json para JSON:API"
+    - "application/x-ndjson para streaming"
+    - "Accept header negotiation"
+    
+  idempotency_examples:
+    success_response:
+      status: 201
+      headers:
+        - "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000"
+        - "X-Correlation-ID: req-12345"
+      body: '{"id": "created-resource", "status": "success"}'
+      
+    duplicate_key_response:
+      status: 409
+      headers:
+        - "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000"
+        - "X-Correlation-ID: req-12345"
+        - "Retry-After: 60"
+      body: '{"error": {"code": "DUPLICATE_KEY", "message": "Idempotency key already used"}}'
+      
+    rate_limit_response:
+      status: 429
+      headers:
+        - "X-RateLimit-Limit: 1000"
+        - "X-RateLimit-Remaining: 0"
+        - "X-RateLimit-Reset: 1640995200"
+        - "Retry-After: 60"
+      body: '{"error": {"code": "RATE_LIMIT_EXCEEDED", "message": "Too many requests"}}'
+```
 
 ---
 
@@ -1718,8 +2354,16 @@ class ContractValidator:
         try:
             with open(schema_path, 'r') as f:
                 schema = json.load(f)
-            # Validate schema itself
-            validate({}, schema)
+            
+            # Self-validate schema structure
+            from jsonschema import Draft7Validator
+            Draft7Validator.check_schema(schema)
+            
+            # Validate examples if they exist
+            if 'examples' in schema:
+                for ex in schema['examples']:
+                    validate(ex, schema)
+            
             return True
         except ValidationError as e:
             print(f"JSON Schema validation failed: {e}")
@@ -1787,17 +2431,46 @@ class SDKGenerator:
                 "--additional-properties", "packageName={service_name},packageVersion=1.0.0"
             ]
             subprocess.run(cmd)
+    
+    def run_golden_tests(self):
+        """Run golden tests for all generated SDKs"""
+        golden_tests = {
+            "python": "cd sdks/python && python -c 'import enis_contracts; print(\"Python SDK OK\")'",
+            "typescript": "cd sdks/typescript && npm run build && node -e 'console.log(\"TypeScript SDK OK\")'",
+            "go": "cd sdks/go && go build ./... && echo 'Go SDK OK'",
+            "java": "cd sdks/java && mvn compile && echo 'Java SDK OK'",
+            "dotnet": "cd sdks/dotnet && dotnet build && echo '.NET SDK OK'"
+        }
+        
+        for language, test_cmd in golden_tests.items():
+            try:
+                result = subprocess.run(test_cmd, shell=True, capture_output=True, text=True)
+                if result.returncode != 0:
+                    raise Exception(f"Golden test failed for {language}: {result.stderr}")
+                print(f"✅ {language} SDK golden test passed")
+            except Exception as e:
+                print(f"❌ {language} SDK golden test failed: {e}")
+                raise
+```
 ```
 
-#### **3. Detección de Breaking Changes**
+#### **3. Detección de Breaking Changes con Herramientas Especializadas**
 ```python
 # scripts/breaking-changes.py
 import yaml
 import json
+import subprocess
 from typing import Dict, List, Any
+from pathlib import Path
 
 class BreakingChangeDetector:
     def __init__(self):
+        self.tools = {
+            'openapi': 'oasdiff',
+            'protobuf': 'buf',
+            'json_schema': 'ajv-diff',
+            'typescript': 'tsc'
+        }
         self.breaking_rules = [
             self.check_removed_endpoints,
             self.check_removed_parameters,
@@ -1810,11 +2483,103 @@ class BreakingChangeDetector:
         """Detect breaking changes between contract versions"""
         breaking_changes = []
         
+        # Herramientas especializadas
+        breaking_changes.extend(self.run_oasdiff(old_spec, new_spec))
+        breaking_changes.extend(self.run_buf_breaking())
+        breaking_changes.extend(self.run_ajv_diff())
+        breaking_changes.extend(self.run_tsc_check())
+        
+        # Reglas custom
         for rule in self.breaking_rules:
             changes = rule(old_spec, new_spec)
             breaking_changes.extend(changes)
         
         return breaking_changes
+    
+    def run_oasdiff(self, old_spec: Dict, new_spec: Dict) -> List[str]:
+        """Run oasdiff for OpenAPI breaking changes"""
+        try:
+            # Save specs to temp files
+            old_file = Path("temp_old.yaml")
+            new_file = Path("temp_new.yaml")
+            
+            with open(old_file, 'w') as f:
+                yaml.dump(old_spec, f)
+            with open(new_file, 'w') as f:
+                yaml.dump(new_spec, f)
+            
+            # Run oasdiff
+            result = subprocess.run([
+                "oasdiff", "breaking", 
+                "--fail-on", "breaking",
+                str(old_file), str(new_file)
+            ], capture_output=True, text=True)
+            
+            # Cleanup
+            old_file.unlink()
+            new_file.unlink()
+            
+            if result.returncode != 0:
+                return [f"OpenAPI breaking change: {result.stdout}"]
+            
+        except Exception as e:
+            return [f"oasdiff error: {str(e)}"]
+        
+        return []
+    
+    def run_buf_breaking(self) -> List[str]:
+        """Run buf breaking for Protocol Buffers"""
+        try:
+            result = subprocess.run([
+                "buf", "breaking", "--against", "main"
+            ], capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                return [f"Protobuf breaking change: {result.stdout}"]
+                
+        except Exception as e:
+            return [f"buf breaking error: {str(e)}"]
+        
+        return []
+    
+    def run_ajv_diff(self) -> List[str]:
+        """Run ajv-diff for JSON Schema changes"""
+        try:
+            # Find schema files
+            schema_files = list(Path("schemas").glob("*.json"))
+            if len(schema_files) < 2:
+                return []
+            
+            # Compare latest two versions
+            old_schema = schema_files[-2]
+            new_schema = schema_files[-1]
+            
+            result = subprocess.run([
+                "ajv-diff", str(old_schema), str(new_schema)
+            ], capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                return [f"JSON Schema breaking change: {result.stdout}"]
+                
+        except Exception as e:
+            return [f"ajv-diff error: {str(e)}"]
+        
+        return []
+    
+    def run_tsc_check(self) -> List[str]:
+        """Run TypeScript compiler for type errors"""
+        try:
+            result = subprocess.run([
+                "tsc", "--noEmit", "--strict"
+            ], capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                return [f"TypeScript breaking change: {result.stdout}"]
+                
+        except Exception as e:
+            return [f"tsc error: {str(e)}"]
+        
+        return []
     
     def check_removed_endpoints(self, old: Dict, new: Dict) -> List[str]:
         """Check for removed API endpoints"""
@@ -1844,9 +2609,27 @@ class BreakingChangeDetector:
                         breaking_changes.append(f"Required parameter removed: {path}.{method}.{param_name}")
         
         return breaking_changes
+    
+    def generate_compatibility_matrix(self, changes: List[str]) -> Dict:
+        """Generate compatibility matrix from detected changes"""
+        matrix = {
+            "contract": "agent-contracts",
+            "version": "v1.0.0",
+            "timestamp": "2025-01-21T00:00:00Z",
+            "breaking_level": "none",
+            "endpoints": [],
+            "impacted_sdks": ["py", "ts", "go", "java", "dotnet"],
+            "migration_notes": []
+        }
+        
+        if changes:
+            matrix["breaking_level"] = "major" if any("removed" in change for change in changes) else "minor"
+            matrix["migration_notes"] = changes
+        
+        return matrix
 ```
 
-### **GitHub Actions Workflow**
+### **GitHub Actions Workflow Avanzado**
 ```yaml
 # .github/workflows/contracts-ci.yml
 name: Contracts CI/CD
@@ -1857,20 +2640,45 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Pin tool versions
+        run: |
+          cat tools/versions.json | jq -r '
+            to_entries
+            | map({key: ( .key | ascii_upcase | gsub("-"; "_") ), value})
+            | .[] | "\(.key)=\(.value)"
+          ' >> $GITHUB_ENV
+      
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          npm install -g @apidevtools/swagger-cli oasdiff@${{ env.OASDIFF }} ajv-diff@${{ env.AJV_DIFF }}
+          go install github.com/bufbuild/buf/cmd/buf@v${{ env.BUF }}
+          npm install -g @stoplight/spectral-cli@${{ env.SPECTRAL }}
       
       - name: Validate OpenAPI specs
         run: python scripts/validate.py
@@ -1880,54 +2688,213 @@ jobs:
       
       - name: Validate Protocol Buffers
         run: python scripts/validate.py --proto
+      
+      - name: Validate TypeScript types
+        run: tsc --noEmit --strict
+      
+      - name: Run Spectral linting
+        run: |
+          npx @stoplight/spectral-cli lint -r .spectral.yaml contracts/openapi/v1/*.yaml --fail-severity=warn
+      
+      - name: Verify cross-references
+        run: python scripts/validate-xrefs.py
+      
+      - name: Compute BLAKE2b for specs
+        run: |
+          mkdir -p docs/.baseline
+          for f in contracts/openapi/v1/*.yaml; do b2sum "$f" >> docs/.baseline/specs.b2; done
+      
+      - name: Generate SBOM
+        run: |
+          syft packages . -o cyclonedx-json=contracts-sbom.json
+      
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v3
+        with:
+          name: contracts-sbom
+          path: contracts-sbom.json
 
   detect-breaking-changes:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      
+      - name: Setup tools
+        run: |
+          pip install -r requirements.txt
+          npm install -g oasdiff ajv-diff
+          go install github.com/bufbuild/buf/cmd/buf@latest
       
       - name: Detect breaking changes
         run: python scripts/breaking-changes.py
       
-      - name: Comment PR
+      - name: Generate compatibility matrix
+        run: |
+          python scripts/breaking-changes.py --generate-matrix > compatibility-matrix.yaml
+      
+      - name: Upload compatibility matrix
+        uses: actions/upload-artifact@v3
+        with:
+          name: compatibility-matrix
+          path: compatibility-matrix.yaml
+      
+      - name: Comment PR with breaking changes
         if: failure()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
+            let comment = '🚨 **Breaking Changes Detected!**\n\n';
+            
+            try {
+              const matrix = fs.readFileSync('compatibility-matrix.yaml', 'utf8');
+              comment += '```yaml\n' + matrix + '\n```\n\n';
+            } catch (e) {
+              comment += 'Please review the breaking changes and update version if necessary.\n';
+            }
+            
+            comment += '**Required Actions:**\n';
+            comment += '- [ ] Review breaking changes\n';
+            comment += '- [ ] Update version number\n';
+            comment += '- [ ] Update migration guide\n';
+            comment += '- [ ] Notify affected teams\n';
+            
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🚨 Breaking changes detected! Please review and update version if necessary.'
-            })
+              body: comment
+            });
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Sign artifacts with Cosign
+        run: |
+          cosign sign-blob --yes contracts-sbom.json > contracts-sbom.json.sig
+      
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-artifacts
+          path: |
+            contracts-sbom.json
+            contracts-sbom.json.sig
 
   generate-sdks:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    needs: [validate, detect-breaking-changes, security-scan]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
       
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0'
+      
       - name: Generate SDKs
         run: python scripts/generate-sdks.py
+      
+      - name: Run SDK tests
+        run: |
+          cd sdks/python && python -m pytest tests/
+          cd ../typescript && npm test
+          cd ../go && go test ./...
+          cd ../java && mvn test
+          cd ../dotnet && dotnet test
+      
+      - name: Generate SBOM for SDKs
+        run: |
+          syft packages sdks/ -o cyclonedx-json=sdks-sbom.json
+      
+      - name: Sign SDK artifacts
+        run: |
+          cosign sign-blob --yes sdks-sbom.json > sdks-sbom.json.sig
       
       - name: Publish to registries
         run: python scripts/publish.py
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## Contract Changes
+            - OpenAPI specs updated
+            - JSON schemas validated
+            - Protocol Buffers compiled
+            - TypeScript types generated
+            
+            ## SDKs Generated
+            - Python SDK
+            - TypeScript SDK
+            - Go SDK
+            - Java SDK
+            - .NET SDK
+            
+            ## Security
+            - SBOM generated
+            - Artifacts signed
+            - Vulnerability scan passed
+          draft: false
+          prerelease: false
+
+  observability:
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Export metrics
+        run: |
+          echo "contracts_validation_duration_seconds{status=\"success\"} ${{ job.duration }}" >> metrics.txt
+          echo "contracts_validation_total{status=\"success\"} 1" >> metrics.txt
+          echo "breaking_changes_detected_total{severity=\"none\"} 1" >> metrics.txt
+          echo "sdk_generation_success_total{language=\"all\"} 1" >> metrics.txt
+      
+      - name: Upload metrics
+        uses: actions/upload-artifact@v3
+        with:
+          name: contract-metrics
+          path: metrics.txt
 ```
 
 ---
@@ -2195,3 +3162,89 @@ class TestIntegration:
 ---
 
 *Master Prompt generado para ENIS v3.0 - Agent Contracts - Enero 2025*
+
+## Operational Docs — Integración, Troubleshooting y Benchmarks
+
+> Este bloque operativiza recomendaciones menores convirtiéndolas en **artefactos, DoD, KPIs y jobs de CI**. Debe ubicarse después de la sección de *Roadmap* y antes de *Appendix*.
+
+### 1) Ejemplos de Integración (`docs/examples/`) — Prioridad: Media
+**Objetivo:** Convertir los contratos en guías ejecutables con rutas, comandos y *asserts*.
+
+**Artefactos (agregar al repo):**
+- `docs/examples/manufacturing-edge-agent-integration.md`
+- `docs/examples/inference-workflow-validation.md`
+- `docs/examples/multi-service-event-orchestration.md`
+
+**Checklist (DoD):**
+- [ ] Cada ejemplo incluye: **contexto → pre-reqs → pasos → asserts → clean up**.
+- [ ] Snippets reproducibles (**curl / httpie / Node/TS / Python**) con *fixtures* mínimas.
+- [ ] **Golden outputs** versionados para detectar *drift*.
+- [ ] Script `scripts/examples/smoke_examples.sh` que ejecute los 3 y falle ante error.
+- [ ] Job CI **`examples-smoke`** obligatorio en PRs que toquen `openapi/`, `schemas/` o `proto/`.
+
+**KPIs mínimos:**
+- Tasa de éxito ≥ **99%** en `examples-smoke` (rolling 30 días).
+- Tiempo total de ejecución ≤ **90 s** en runner estándar.
+
+---
+
+### 2) Troubleshooting (`docs/troubleshooting/`) — Prioridad: Media
+**Objetivo:** Reducir TTR (*time-to-resolve*) y duplicados en issues.
+
+**Artefactos (agregar al repo):**
+- `docs/troubleshooting/contract-validation-errors.md`
+- `docs/troubleshooting/sdk-generation-issues.md`
+- `docs/troubleshooting/version-compatibility-guide.md`
+
+**Plantilla por página:**
+- **Síntoma** · **Causa Probable** · **Cómo Diagnosticar** (comandos exactos) · **Fix** · **Prevención** · **Indicadores** (métricas a vigilar) · **Enlaces internos**.
+
+**Checklist (DoD):**
+- [ ] Todos los errores comunes tienen **código de diagnóstico** (ej.: `TROU-VAL-001`).
+- [ ] Cada *fix* incluye **comando verificable** y **resultado esperado**.
+- [ ] Hook CI que, si falla `validate-*`, muestre **enlace directo** a la sección de troubleshooting relevante.
+- [ ] Etiquetas de issues mapeadas a códigos (ej.: `type:troubleshooting:VAL-001`).
+
+**KPIs mínimos:**
+- Reducción ≥ **30%** del tiempo medio de resolución en 60 días.
+- ≥ **80%** de issues etiquetadas con el **código de troubleshooting** correcto.
+
+---
+
+### 3) Performance Benchmarks — Prioridad: Baja
+**Objetivo:** Medir regresiones en validación y generación de SDKs y vigilar latencias en producción.
+
+**Artefactos (agregar al repo):**
+- `benchmarks/validation_bench.md` + script `scripts/bench/bench_validate.py`
+- `benchmarks/sdk_generation_bench.md` + script `scripts/bench/bench_sdks.py`
+- `benchmarks/latency_prod_panel.md` (instrucciones para dashboard observabilidad)
+
+**Métricas / objetivos iniciales:**
+- **Validación de contratos (p95):** ≤ **1.2 s** por paquete (`openapi`+`schemas`+`proto`).
+- **Generación de SDKs (p95):** TS ≤ **25 s**, Py ≤ **30 s**, Go ≤ **35 s** (runner GitHub *medium*).
+- **Latencia de conformidad en producción (p95):** ≤ **100 ms** (validación liviana en gateway).
+
+**Checklist (DoD):**
+- [ ] Bench reproducible **local + CI** con **baseline** guardada (último release).
+- [ ] Gate de **regresión**: falla si p95 empeora **> 20%** vs baseline.
+- [ ] Publicar tablas comparativas por commit como **artefacto CI**.
+
+---
+
+### 4) Metadatos y Ciclo de Vida (aplica a todas las páginas nuevas)
+Añadir cabecera YAML al inicio de cada documento:
+
+```yaml
+---
+doc_id: EX-EDG-001            # UID único (p. ej., EX-EDG-001 / TROU-VAL-001 / BENCH-VAL-001)
+owners: [platform-integrations, sdk-core]
+last_review: 2025-10-07
+review_cycle_days: 30
+---
+```
+
+**Convenciones adicionales:**
+- Corregir acentos y usar *kebab-case* en nombres de archivos.
+- Conectar cada documento a su **job de CI** (p. ej., `examples-smoke`, `troubleshoot-hints`, `bench-ci`).
+
+> **Nota:** Este bloque no altera contratos; únicamente añade *operational docs* y *quality gates* asociados.

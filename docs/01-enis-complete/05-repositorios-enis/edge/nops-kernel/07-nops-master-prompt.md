@@ -11,14 +11,13 @@
   - [📁 Estructura Completa a Generar](#-estructura-completa-a-generar)
   - [🔧 Contenido Técnico Específico](#-contenido-t%C3%A9cnico-espec%C3%ADfico)
     - [Python Implementation Core](#python-implementation-core)
-  - [🏗️ 7 Módulos de Infraestructura NOPS](#-7-m%C3%B3dulos-de-infraestructura-nops)
-    - [1. Observability Module (OM) ✅](#1-observability-module-om-)
-    - [2. Scorecard Module (SM) ✅](#2-scorecard-module-sm-)
-    - [3. Billing Module (BM) ✅](#3-billing-module-bm-)
-    - [4. Secure Sandbox Execution (SSE) 🚧 Q2 2025](#4-secure-sandbox-execution-sse--q2-2025)
-    - [5. Resource Governance Module (RGM) 🚧 Q2 2025](#5-resource-governance-module-rgm--q2-2025)
-    - [6. Agent Lifecycle Manager (ALM) 📅 Q3 2025](#6-agent-lifecycle-manager-alm--q3-2025)
-    - [7. Security & Compliance Module (SCM) 📅 Q3 2025](#7-security--compliance-module-scm--q3-2025)
+  - [🏗️ NOPS Kernel SLIM + API Clients para Servicios Externos](#-nops-kernel-slim--api-clients-para-servicios-externos)
+    - [⚡ Principio de Diseño: Kernel SLIM](#-principio-de-diseño-kernel-slim)
+    - [📡 API Clients Ligeros para Servicios Externos](#-api-clients-ligeros-para-servicios-externos)
+    - [1. Observability API Client (Básico) ✅](#1-observability-api-client-básico-)
+    - [2. Billing API Client (Ligero) ✅](#2-billing-api-client-ligero-)
+    - [3. Compliance API Client (Crítico) ✅](#3-compliance-api-client-crítico-)
+    - [4. Servicios Externos sin API Client (Opcionales)](#4-servicios-externos-sin-api-client-opcionales)
   - [🔧 Integración Completa del Kernel](#-integraci%C3%B3n-completa-del-kernel)
   - [📊 Diagramas de Arquitectura](#-diagramas-de-arquitectura)
     - [Arquitectura Principal NOPS Kernel](#arquitectura-principal-nops-kernel)
@@ -302,553 +301,398 @@ class AgentRuntime:
             raise
 ```
 
-## 🏗️ 7 Módulos de Infraestructura NOPS
+## 🏗️ NOPS Kernel SLIM + API Clients para Servicios Externos
 
-### 1. Observability Module (OM) ✅
+### ⚡ Principio de Diseño: Kernel SLIM
+
+```yaml
+principio_slim:
+  concepto: "NOPS Kernel mantiene SOLO el core ligero del control plane"
+  
+  kernel_responsabilidades:
+    - "Agent Registry (CRUD, heartbeats, capabilities)"
+    - "Event Bus (pub/sub con Redis Streams)"
+    - "Policy Engine (ABAC, rate-limit, egress policies)"
+    - "Routing & Scoring (intelligent routing ligero)"
+    - "Security Layer (JWT, mTLS, API-Keys, HMAC)"
+    
+  NO_en_kernel:
+    - "❌ Observability avanzada (Prometheus/Grafana/Jaeger/ELK/Vector)"
+    - "❌ Billing/Invoicing/Payment processing"
+    - "❌ Scorecard/Analytics/ML models"
+    - "❌ Sandbox runtime execution"
+    - "❌ Compliance storage/reporting"
+    
+  servicios_externos:
+    ubicacion: "cloud-core/{service}-service/"
+    comunicacion: "mTLS + JWT s2s + webhooks + eventos"
+    deployment: "Independiente del kernel"
+    escalamiento: "Horizontal independiente"
+    
+  beneficios:
+    - "Kernel < 100MB RAM baseline"
+    - "Startup < 3 segundos"
+    - "Funciona offline/air-gapped"
+    - "Degraded mode posible"
+    - "Menor superficie de ataque"
+```
+
+---
+
+### 📡 API Clients Ligeros para Servicios Externos
+
+El NOPS Kernel incluye **API clients ligeros** (NO módulos pesados) para comunicarse con servicios externos en cloud-core/.
+
+#### 1. Observability API Client (Básico) ✅
 
 ```python
-# nops_kernel/modules/observability.py
-from prometheus_client import Counter, Histogram, Gauge, Info, CollectorRegistry
-from opentelemetry import trace, metrics
-from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-import structlog
+# nops_kernel/clients/observability_client.py
+import httpx
 from typing import Dict, Any, Optional
-from contextlib import asynccontextmanager
+import structlog
+from prometheus_client import Counter, Histogram, Gauge, CollectorRegistry
 
-class ObservabilityModule:
+class ObservabilityAPIClient:
     """
-    Módulo de observabilidad completa para NOPS
-    Proporciona métricas, trazas y logging estructurado
+    Cliente API ligero para observability-service (cloud-core)
+    
+    Responsabilidades del CLIENTE (en kernel):
+    - Enviar métricas básicas a servicio externo
+    - Prometheus endpoint local (/metrics)
+    - Logging estructurado local (stdout)
+    - Degraded mode si servicio no disponible
+    
+    Responsabilidades del SERVICIO (cloud-core/observability-service):
+    - Almacenamiento de series temporales (Prometheus/VictoriaMetrics)
+    - Dashboards (Grafana)
+    - Tracing distribuido (Jaeger)
+    - Log aggregation (ELK/Vector)
+    - Alerting avanzado
     """
     
-    def __init__(self, config: 'ObservabilityConfig'):
-        self.config = config
+    def __init__(
+        self, 
+        service_url: Optional[str] = None,
+        mtls_cert: Optional[str] = None,
+        mtls_key: Optional[str] = None
+    ):
+        self.service_url = service_url
+        self.enabled = service_url is not None
         
-        # Prometheus metrics
+        # Cliente HTTP ligero con mTLS
+        if self.enabled:
+            self.client = httpx.AsyncClient(
+                base_url=service_url,
+                cert=(mtls_cert, mtls_key) if mtls_cert else None,
+                verify=True,
+                timeout=5.0  # Timeout agresivo
+            )
+        else:
+            self.client = None
+        
+        # Métricas locales básicas (Prometheus endpoint)
         self.registry = CollectorRegistry()
-        
         self.agent_executions = Counter(
             'nops_agent_executions_total',
             'Total agent executions',
-            ['agent_type', 'edge_type', 'status', 'tenant_id'],
+            ['agent_type', 'status'],
             registry=self.registry
         )
-        
         self.execution_duration = Histogram(
-            'nops_agent_execution_duration_seconds',
-            'Agent execution duration',
-            ['agent_type', 'edge_type'],
-            buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+            'nops_execution_duration_seconds',
+            'Execution duration',
+            ['agent_type'],
+            buckets=(0.1, 0.5, 1.0, 2.5, 5.0),
             registry=self.registry
         )
         
-        self.active_agents = Gauge(
-            'nops_active_agents',
-            'Currently active agents',
-            ['edge_type', 'tenant_id'],
-            registry=self.registry
-        )
+        self.logger = structlog.get_logger().bind(module="observability_client")
+    
+    async def send_metrics(self, metrics: Dict[str, Any]) -> bool:
+        """Envía métricas al servicio externo (best-effort)"""
+        if not self.enabled:
+            return False  # Degraded mode
         
-        self.resource_usage = Gauge(
-            'nops_resource_usage',
-            'Resource usage by type',
-            ['resource_type', 'edge_type', 'unit'],
-            registry=self.registry
-        )
-        
-        self.kernel_info = Info(
-            'nops_kernel',
-            'NOPS Kernel information',
-            registry=self.registry
-        )
-        
-        # OpenTelemetry setup
-        self._setup_opentelemetry()
-        
-        # Structured logging
-        self.logger = structlog.get_logger().bind(
-            module="observability",
-            version=config.version
-        )
-        
-    def _setup_opentelemetry(self):
-        """Configura OpenTelemetry para trazas y métricas"""
-        # Tracing
-        trace_provider = TracerProvider()
-        processor = BatchSpanProcessor(
-            OTLPSpanExporter(endpoint=self.config.otlp_endpoint)
-        )
-        trace_provider.add_span_processor(processor)
-        trace.set_tracer_provider(trace_provider)
-        self.tracer = trace.get_tracer("nops.kernel", self.config.version)
-        
-        # Metrics
-        reader = PrometheusMetricReader()
-        provider = MeterProvider(metric_readers=[reader])
-        metrics.set_meter_provider(provider)
-        self.meter = metrics.get_meter("nops.kernel", self.config.version)
-        
-    @asynccontextmanager
-    async def trace_execution(self, operation: str, attributes: Dict[str, Any]):
-        """Context manager para trazar operaciones"""
-        with self.tracer.start_as_current_span(operation) as span:
-            for key, value in attributes.items():
-                span.set_attribute(key, str(value))
-            try:
-                yield span
-            except Exception as e:
-                span.record_exception(e)
-                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
-                raise
-            finally:
-                span.end()
+        try:
+            response = await self.client.post(
+                "/api/v1/metrics",
+                json=metrics,
+                headers={"X-Tenant-ID": metrics.get("tenant_id")}
+            )
+            response.raise_for_status()
+            return True
+        except (httpx.HTTPError, httpx.TimeoutException) as e:
+            # Degraded mode: log warning y continuar
+            self.logger.warning(
+                "observability_service_unavailable",
+                error=str(e),
+                degraded_mode=True
+            )
+            return False
+    
+    def record_execution(self, agent_type: str, status: str, duration: float):
+        """Registra métricas locales (siempre disponible)"""
+        self.agent_executions.labels(agent_type=agent_type, status=status).inc()
+        self.execution_duration.labels(agent_type=agent_type).observe(duration)
+    
+    def get_metrics_endpoint(self) -> str:
+        """Retorna el endpoint Prometheus local"""
+        return "/metrics"  # Expuesto por el kernel
 ```
 
-### 2. Scorecard Module (SM) ✅
+---
+
+#### 2. Billing API Client (Ligero) ✅
 
 ```python
-# nops_kernel/modules/scorecard.py
-from typing import Dict, List, Optional, Tuple
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-from dataclasses import dataclass
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-import asyncio
-
-@dataclass
-class AssessmentReport:
-    """Reporte de evaluación pre-instalación"""
-    tenant_id: str
-    timestamp: datetime
-    scores: Dict[str, float]
-    overall_score: float
-    recommendations: List[str]
-    ready_for_deployment: bool
-    estimated_performance: Dict[str, Any]
-
-@dataclass
-class PerformanceReport:
-    """Reporte de rendimiento post-instalación"""
-    tenant_id: str
-    period: timedelta
-    scores: Dict[str, float]
-    insights: List[str]
-    trend: str  # 'improving', 'stable', 'declining'
-    optimization_opportunities: List[Dict[str, Any]]
-
-class ScorecardModule:
-    """
-    Módulo de scoring y evaluación de rendimiento
-    Evalúa la preparación del sistema y el rendimiento continuo
-    """
-    
-    def __init__(self, db_session: AsyncSession, config: 'ScorecardConfig'):
-        self.session = db_session
-        self.config = config
-        self.scoring_engine = ScoringEngine(config.scoring_weights)
-        self.analytics_engine = AnalyticsEngine()
-        self.logger = structlog.get_logger().bind(module="scorecard")
-        
-    async def pre_installation_assessment(
-        self, 
-        tenant_id: str,
-        infrastructure: Dict[str, Any]
-    ) -> AssessmentReport:
-        """
-        Evalúa la infraestructura antes de la instalación
-        Determina si el sistema está listo para NOPS
-        """
-        self.logger.info(
-            "Starting pre-installation assessment",
-            tenant_id=tenant_id
-        )
-        
-        # Evaluar cada componente
-        scores = {
-            'compute_readiness': await self._assess_compute(infrastructure),
-            'network_readiness': await self._assess_network(infrastructure),
-            'storage_readiness': await self._assess_storage(infrastructure),
-            'security_readiness': await self._assess_security(infrastructure),
-            'integration_readiness': await self._assess_integrations(infrastructure)
-        }
-        
-        # Calcular score general
-        overall_score = self.scoring_engine.calculate_overall(scores)
-        
-        # Generar recomendaciones basadas en scores
-        recommendations = self._generate_recommendations(scores, infrastructure)
-        
-        # Estimar performance esperado
-        estimated_performance = self._estimate_performance(
-            infrastructure,
-            overall_score
-        )
-        
-        return AssessmentReport(
-            tenant_id=tenant_id,
-            timestamp=datetime.utcnow(),
-            scores=scores,
-            overall_score=overall_score,
-            recommendations=recommendations,
-            ready_for_deployment=overall_score >= self.config.deployment_threshold,
-            estimated_performance=estimated_performance
-        )
-    
-    async def post_installation_scoring(
-        self,
-        tenant_id: str,
-        period: timedelta = timedelta(days=30)
-    ) -> PerformanceReport:
-        """
-        Scoring continuo post-instalación
-        Analiza el rendimiento y sugiere optimizaciones
-        """
-        end_date = datetime.utcnow()
-        start_date = end_date - period
-        
-        # Recopilar métricas del período
-        metrics = await self._fetch_metrics(tenant_id, start_date, end_date)
-        
-        # Convertir a DataFrame para análisis
-        df = pd.DataFrame(metrics)
-        
-        # Calcular scores de rendimiento
-        performance_scores = {
-            'availability': self._calculate_availability_score(df),
-            'latency': self._calculate_latency_score(df),
-            'throughput': self._calculate_throughput_score(df),
-            'error_rate': self._calculate_error_score(df),
-            'resource_efficiency': self._calculate_efficiency_score(df),
-            'cost_efficiency': self._calculate_cost_efficiency_score(df)
-        }
-        
-        # Generar insights usando análisis estadístico
-        insights = self.analytics_engine.generate_insights(df, performance_scores)
-        
-        # Determinar tendencia
-        trend = self._analyze_trend(df, performance_scores)
-        
-        # Identificar oportunidades de optimización
-        optimization_opportunities = self._identify_optimizations(
-            df,
-            performance_scores
-        )
-        
-        return PerformanceReport(
-            tenant_id=tenant_id,
-            period=period,
-            scores=performance_scores,
-            insights=insights,
-            trend=trend,
-            optimization_opportunities=optimization_opportunities
-        )
-```
-
-### 3. Billing Module (BM) ✅
-
-```python
-# nops_kernel/modules/billing.py
+# nops_kernel/clients/billing_client.py
+import httpx
+from typing import Dict, Any, Optional
 from decimal import Decimal
-from typing import Dict, List, Optional
-from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from dataclasses import dataclass
+from datetime import datetime
+import structlog
 import asyncio
-import redis.asyncio as redis
 
-@dataclass
-class UsageRecord:
-    """Registro de uso para facturación"""
-    tenant_id: str
-    agent_id: str
-    edge_type: str
-    timestamp: datetime
-    cpu_seconds: float
-    memory_gb_hours: float
-    storage_gb_hours: float
-    network_gb: float
-    executions: int
-    custom_metrics: Dict[str, float] = None
-
-@dataclass
-class Invoice:
-    """Factura generada"""
-    invoice_id: str
-    tenant_id: str
-    period: 'BillingPeriod'
-    line_items: Dict[str, Decimal]
-    discounts: Decimal
-    credits: Decimal
-    subtotal: Decimal
-    tax: Decimal
-    total: Decimal
-    due_date: datetime
-    status: str  # 'draft', 'issued', 'paid', 'overdue'
-
-class BillingModule:
+class BillingAPIClient:
     """
-    Módulo de facturación y tracking de uso
-    Soporta múltiples modelos de pricing y facturación en tiempo real
+    Cliente API ligero para billing-service (cloud-core)
+    
+    Responsabilidades del CLIENTE (en kernel):
+    - Enviar eventos de uso a servicio externo
+    - Queue local para retry en caso de fallo
+    - Métricas básicas de usage (counters locales)
+    
+    Responsabilidades del SERVICIO (cloud-core/billing-service):
+    - Agregación y almacenamiento de usage
+    - Cálculo de costos y pricing
+    - Generación de invoices
+    - Integración con payment gateways
+    - Reporting y analytics
     """
     
     def __init__(
         self,
-        db_session: AsyncSession,
-        redis_client: redis.Redis,
-        config: 'BillingConfig'
+        service_url: Optional[str] = None,
+        mtls_cert: Optional[str] = None,
+        mtls_key: Optional[str] = None,
+        redis_client: Optional[Any] = None
     ):
-        self.session = db_session
+        self.service_url = service_url
+        self.enabled = service_url is not None
         self.redis = redis_client
-        self.config = config
-        self.pricing_engine = PricingEngine(config.pricing_models)
-        self.invoice_generator = InvoiceGenerator()
-        self.usage_aggregator = UsageAggregator()
         
-    async def track_usage(
-        self,
-        usage_record: UsageRecord
-    ) -> None:
-        """
-        Registra uso en tiempo real con agregación eficiente
-        """
-        # Guardar en Redis para agregación rápida
-        key = f"usage:{usage_record.tenant_id}:{usage_record.timestamp.date()}"
+        if self.enabled:
+            self.client = httpx.AsyncClient(
+                base_url=service_url,
+                cert=(mtls_cert, mtls_key) if mtls_cert else None,
+                verify=True,
+                timeout=5.0
+            )
+        else:
+            self.client = None
         
-        usage_data = {
-            'cpu_seconds': usage_record.cpu_seconds,
-            'memory_gb_hours': usage_record.memory_gb_hours,
-            'storage_gb_hours': usage_record.storage_gb_hours,
-            'network_gb': usage_record.network_gb,
-            'executions': usage_record.executions
-        }
-        
-        # Incrementar contadores atómicamente
-        async with self.redis.pipeline() as pipe:
-            for metric, value in usage_data.items():
-                await pipe.hincrbyfloat(key, metric, value)
-            await pipe.expire(key, 86400 * 35)  # 35 días de retención
-            await pipe.execute()
-        
-        # Persistir en base de datos de forma asíncrona
-        asyncio.create_task(self._persist_usage_record(usage_record))
-        
-        # Verificar límites y alertas
-        await self._check_usage_limits(usage_record)
-```
-
-### 4. Secure Sandbox Execution (SSE) 🚧 Q2 2025
-
-```python
-# nops_kernel/modules/secure_sandbox.py
-import asyncio
-from typing import Optional, Dict, List, Any
-from dataclasses import dataclass
-import docker
-from pathlib import Path
-import tempfile
-import resource
-
-@dataclass
-class SecurityProfile:
-    """Perfil de seguridad para sandbox"""
-    name: str
-    cpu_limit: float  # CPU cores
-    memory_limit: int  # MB
-    process_limit: int
-    storage_limit: str  # e.g., "1G"
-    network_policy: str  # 'none', 'restricted', 'full'
-    allowed_syscalls: List[str]
-    blocked_paths: List[str]
-    environment_vars: Dict[str, str]
-
-class SecureSandboxModule:
-    """
-    Módulo de ejecución segura en sandbox
-    Proporciona aislamiento completo para la ejecución de agentes
+        self.logger = structlog.get_logger().bind(module="billing_client")
     
-    Status: En desarrollo - Q2 2025
-    """
-    
-    def __init__(self, config: 'SandboxConfig'):
-        self.config = config
-        self.docker_client = docker.from_env()
-        self.security_profiles = self._load_security_profiles()
-        
-    async def create_sandbox(
-        self,
-        agent_id: str,
-        security_profile: SecurityProfile
-    ) -> 'Sandbox':
-        """
-        Crea un sandbox aislado para ejecución de agente
-        
-        Features Q2 2025:
-        - Container isolation con cgroups v2
-        - Seccomp profiles personalizados
-        - AppArmor/SELinux integration
-        - Network namespacing
-        """
-        # TODO: Implementación completa en Q2 2025
-        raise NotImplementedError("Secure Sandbox Module - Q2 2025")
-```
-
-### 5. Resource Governance Module (RGM) 🚧 Q2 2025
-
-```python
-# nops_kernel/modules/resource_governance.py
-from typing import Dict, List, Optional, Tuple
-import asyncio
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-import heapq
-
-@dataclass
-class ResourceRequest:
-    """Solicitud de recursos"""
-    tenant_id: str
-    agent_id: str
-    priority: int  # 0-100, higher = more priority
-    requirements: Dict[str, float]
-    duration_estimate: int  # seconds
-    deadline: Optional[datetime] = None
-
-class ResourceGovernanceModule:
-    """
-    Módulo de gobernanza de recursos
-    Gestiona la asignación justa y eficiente de recursos
-    
-    Status: En desarrollo - Q2 2025
-    """
-    
-    def __init__(self, config: 'GovernanceConfig'):
-        self.config = config
-        self.resource_pool = ResourcePool()
-        self.allocation_strategies = {
-            'fair_share': FairShareStrategy(),
-            'priority_based': PriorityBasedStrategy(),
-            'sla_aware': SLAAwareStrategy(),
-            'cost_optimized': CostOptimizedStrategy()
-        }
-        self.active_allocations = {}
-        
-    async def request_resources(
-        self,
-        request: ResourceRequest,
-        strategy: str = 'fair_share'
-    ) -> 'ResourceAllocation':
-        """
-        Solicita recursos con estrategia específica
-        
-        Features Q2 2025:
-        - Multi-tenant fairness algorithms
-        - SLA-aware scheduling
-        - Cost optimization
-        - Predictive scaling
-        """
-        # TODO: Implementación completa en Q2 2025
-        raise NotImplementedError("Resource Governance Module - Q2 2025")
-```
-
-### 6. Agent Lifecycle Manager (ALM) 📅 Q3 2025
-
-```python
-# nops_kernel/modules/agent_lifecycle.py
-from typing import Dict, List, Optional
-from enum import Enum
-import asyncio
-from dataclasses import dataclass
-
-class DeploymentStrategy(Enum):
-    ROLLING = "rolling"
-    BLUE_GREEN = "blue_green"
-    CANARY = "canary"
-    RECREATE = "recreate"
-
-class AgentLifecycleManager:
-    """
-    Módulo de gestión del ciclo de vida de agentes
-    Automatiza deployment, updates y rollbacks
-    
-    Status: Planificado - Q3 2025
-    """
-    
-    def __init__(self, config: 'LifecycleConfig'):
-        self.config = config
-        self.deployment_engine = DeploymentEngine()
-        self.version_controller = VersionController()
-        self.health_monitor = HealthMonitor()
-        
-    async def deploy_agent(
-        self,
-        agent_spec: 'AgentSpecification',
-        strategy: DeploymentStrategy = DeploymentStrategy.ROLLING
-    ) -> 'DeploymentResult':
-        """
-        Despliega agente con estrategia específica
-        
-        Features Q3 2025:
-        - Rolling updates con zero downtime
-        - Blue-green deployments
-        - Canary releases con análisis automático
-        - Automatic rollback on failure
-        """
-        # TODO: Implementación completa en Q3 2025
-        raise NotImplementedError("Agent Lifecycle Manager - Q3 2025")
-```
-
-### 7. Security & Compliance Module (SCM) 📅 Q3 2025
-
-```python
-# nops_kernel/modules/security_compliance.py
-from typing import Dict, List, Set
-from enum import Enum
-import asyncio
-from dataclasses import dataclass
-
-class ComplianceFramework(Enum):
-    SOC2 = "soc2"
-    HIPAA = "hipaa"
-    PCI_DSS = "pci_dss"
-    GDPR = "gdpr"
-    ISO27001 = "iso27001"
-
-class SecurityComplianceModule:
-    """
-    Módulo de seguridad y cumplimiento
-    Garantiza compliance con frameworks regulatorios
-    
-    Status: Planificado - Q3 2025
-    """
-    
-    def __init__(self, config: 'ComplianceConfig'):
-        self.config = config
-        self.audit_logger = AuditLogger()
-        self.policy_engine = PolicyEngine()
-        self.vulnerability_scanner = VulnerabilityScanner()
-        
-    async def enforce_compliance(
+    async def record_usage(
         self,
         tenant_id: str,
-        frameworks: List[ComplianceFramework]
-    ) -> 'ComplianceReport':
+        usage_event: Dict[str, Any]
+    ) -> bool:
         """
-        Aplica y verifica compliance con frameworks
+        Registra evento de uso en billing-service (best-effort)
         
-        Features Q3 2025:
-        - Automated compliance scanning
-        - Policy enforcement engine
-        - Audit trail generation
-        - Vulnerability assessment
+        En degraded mode: queue localmente en Redis para retry posterior
         """
-        # TODO: Implementación completa en Q3 2025
-        raise NotImplementedError("Security Compliance Module - Q3 2025")
+        if not self.enabled:
+            return await self._queue_for_retry(tenant_id, usage_event)
+        
+        try:
+            response = await self.client.post(
+                "/api/v1/usage",
+                json={
+                    "tenant_id": tenant_id,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    **usage_event
+                },
+                headers={"X-Tenant-ID": tenant_id}
+            )
+            response.raise_for_status()
+            return True
+        except (httpx.HTTPError, httpx.TimeoutException) as e:
+            # Degraded mode: queue para retry
+            self.logger.warning(
+                "billing_service_unavailable",
+                tenant_id=tenant_id,
+                error=str(e)
+            )
+            return await self._queue_for_retry(tenant_id, usage_event)
+    
+    async def _queue_for_retry(
+        self,
+        tenant_id: str,
+        usage_event: Dict[str, Any]
+    ) -> bool:
+        """Queue evento en Redis para retry posterior"""
+        if not self.redis:
+            self.logger.error("billing_queue_unavailable", tenant_id=tenant_id)
+            return False
+        
+        key = f"billing:queue:{tenant_id}"
+        await self.redis.lpush(key, str(usage_event))
+        await self.redis.expire(key, 86400 * 7)  # 7 días retención
+        return True
+```
+
+---
+
+#### 3. Compliance API Client (Crítico) ✅
+
+```python
+# nops_kernel/clients/compliance_client.py
+import httpx
+from typing import Dict, Any, Optional
+from datetime import datetime
+import structlog
+
+class ComplianceAPIClient:
+    """
+    Cliente API ligero para compliance-service (cloud-core)
+    
+    Responsabilidades del CLIENTE (en kernel):
+    - Enviar eventos de auditoría a servicio externo
+    - Persistencia local inmutable en caso de fallo
+    - Validación SEC (Signed Execution Contract)
+    
+    Responsabilidades del SERVICIO (cloud-core/compliance-service):
+    - Audit trail inmutable (blockchain/append-only DB)
+    - SEC validation y reporting
+    - Regulatory compliance (SOC2, GDPR, HIPAA, etc.)
+    - Forensics y investigación
+    - Export de evidencias para auditorías
+    """
+    
+    def __init__(
+        self,
+        service_url: Optional[str] = None,
+        mtls_cert: Optional[str] = None,
+        mtls_key: Optional[str] = None,
+        local_audit_file: Optional[str] = "/var/log/nops/audit.jsonl"
+    ):
+        self.service_url = service_url
+        self.enabled = service_url is not None
+        self.local_audit_file = local_audit_file
+        
+        if self.enabled:
+            self.client = httpx.AsyncClient(
+                base_url=service_url,
+                cert=(mtls_cert, mtls_key) if mtls_cert else None,
+                verify=True,
+                timeout=10.0  # Timeout más largo para audit crítico
+            )
+        else:
+            self.client = None
+        
+        self.logger = structlog.get_logger().bind(module="compliance_client")
+    
+    async def log_audit_event(
+        self,
+        event_type: str,
+        tenant_id: str,
+        details: Dict[str, Any],
+        severity: str = "INFO"
+    ) -> bool:
+        """
+        Registra evento de auditoría (CRÍTICO - always persist)
+        """
+        audit_event = {
+            "event_type": event_type,
+            "tenant_id": tenant_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "severity": severity,
+            "details": details
+        }
+        
+        # SIEMPRE persistir localmente (append-only)
+        await self._persist_local(audit_event)
+        
+        # Enviar a servicio externo (best-effort)
+        if self.enabled:
+            try:
+                response = await self.client.post(
+                    "/api/v1/audit",
+                    json=audit_event,
+                    headers={"X-Tenant-ID": tenant_id}
+                )
+                response.raise_for_status()
+                return True
+            except (httpx.HTTPError, httpx.TimeoutException) as e:
+                self.logger.error(
+                    "compliance_service_unavailable",
+                    error=str(e),
+                    event_type=event_type
+                )
+                return False
+        
+        return True  # Local persistence successful
+    
+    async def _persist_local(self, audit_event: Dict[str, Any]):
+        """Persistencia local inmutable (append-only)"""
+        import aiofiles
+        import json
+        
+        async with aiofiles.open(self.local_audit_file, mode='a') as f:
+            await f.write(json.dumps(audit_event) + "\n")
+```
+
+---
+
+#### 4. Servicios Externos sin API Client (Opcionales)
+
+Los siguientes servicios NO requieren clients en el kernel (funcionalidad post-GA):
+
+```python
+# Estos servicios se comunican por otros medios (no API directa desde kernel)
+
+"""
+scorecard-service (cloud-core):
+  - Consume métricas de observability-service
+  - NO requiere client directo en kernel
+  - NOPS envía métricas a observability, scorecard las analiza
+  
+sandbox-service (cloud-core):
+  - Runtime de ejecución aislada
+  - Usado por edge-agents, NO por kernel directamente
+  - Comunicación: edge-agent → sandbox-service API
+  
+lifecycle-service (cloud-core):
+  - Orquestación de deployments
+  - Operado por DevOps/CI/CD, NO por kernel
+  - Comunicación: CI/CD pipeline → lifecycle-service API
+"""
+```
+
+---
+
+### 📋 Resumen de API Clients en NOPS Kernel SLIM
+
+```yaml
+api_clients_en_kernel:
+  incluidos:
+    - ObservabilityAPIClient (básico + degraded mode)
+    - BillingAPIClient (usage tracking + queue)
+    - ComplianceAPIClient (audit trail + local persistence)
+  
+  NO_incluidos:
+    - ScorecardAPIClient (scorecard lee de observability)
+    - SandboxAPIClient (usado por edge-agents, no kernel)
+    - LifecycleAPIClient (usado por CI/CD, no kernel)
+  
+  caracteristicas_clients:
+    tamaño: "< 200 líneas por client"
+    dependencias: "httpx, structlog (ligeras)"
+    degraded_mode: "Todos soportan operación offline"
+    timeout: "Agresivos (5-10s)"
+    comunicacion: "mTLS + JWT s2s"
 ```
 
 ## 🔧 Integración Completa del Kernel
@@ -900,48 +744,51 @@ class NOPSKernel:
         self.agent_registry = AgentRegistry()
         self.event_bus = EventBus()
         
-        # Infrastructure modules (7 total)
-        self._initialize_modules()
+        # External service API clients (ligeros, opcionales)
+        self._initialize_external_clients()
         
         self._running = False
         self._health_check_task = None
         
-    def _initialize_modules(self):
-        """Inicializa los 7 módulos de infraestructura"""
-        # Módulos en producción
-        self.observability = ObservabilityModule(self.config.observability)
-        self.scorecard = ScorecardModule(self.session, self.config.scorecard)
-        self.billing = BillingModule(
-            self.session,
-            self.redis,
-            self.config.billing
+    def _initialize_external_clients(self):
+        """
+        Inicializa API clients ligeros para servicios externos (cloud-core)
+        
+        Principio SLIM: El kernel NO incluye módulos pesados.
+        Solo clients HTTP ligeros que funcionan en degraded mode si servicios no disponibles.
+        """
+        # Observability client (básico - siempre incluido)
+        self.observability_client = ObservabilityAPIClient(
+            service_url=self.config.observability_service_url,
+            mtls_cert=self.config.mtls_cert,
+            mtls_key=self.config.mtls_key
         )
         
-        # Módulos Q2 2025
-        if self.config.enable_sandbox:
-            self.sandbox = SecureSandboxModule(self.config.sandbox)
+        # Billing client (opcional - puede quedar disabled en air-gapped)
+        if self.config.billing_service_url:
+            self.billing_client = BillingAPIClient(
+                service_url=self.config.billing_service_url,
+                mtls_cert=self.config.mtls_cert,
+                mtls_key=self.config.mtls_key,
+                redis_client=self.redis
+            )
         else:
-            self.sandbox = None
+            self.billing_client = None  # Degraded mode - no billing
             
-        if self.config.enable_governance:
-            self.governance = ResourceGovernanceModule(self.config.governance)
-        else:
-            self.governance = None
+        # Compliance client (crítico - siempre incluido con fallback local)
+        self.compliance_client = ComplianceAPIClient(
+            service_url=self.config.compliance_service_url,
+            mtls_cert=self.config.mtls_cert,
+            mtls_key=self.config.mtls_key,
+            local_audit_file=self.config.local_audit_file
+        )
         
-        # Módulos Q3 2025
-        if self.config.enable_lifecycle:
-            self.lifecycle = AgentLifecycleManager(self.config.lifecycle)
-        else:
-            self.lifecycle = None
-            
-        if self.config.enable_compliance:
-            self.compliance = SecurityComplianceModule(self.config.compliance)
-        else:
-            self.compliance = None
+        # Scorecard, Sandbox, Lifecycle NO requieren clients directos
+        # (se comunican indirectamente o son operados por otros sistemas)
     
     async def start(self):
-        """Inicia el NOPS Kernel"""
-        self.logger.info("Starting NOPS Kernel", version="3.1", modules=7)
+        """Inicia el NOPS Kernel (SLIM)"""
+        self.logger.info("Starting NOPS Kernel SLIM", version="3.1", external_clients=3)
         
         try:
             # Inicializar componentes core
@@ -1848,10 +1695,11 @@ validation_checklist:
     - [x] Python 3.11+ como lenguaje base
     
   technical_completeness:
-    - [x] 7 módulos de infraestructura detallados
+    - [x] API clients ligeros para servicios externos (principio SLIM)
     - [x] Ejemplos de código Python ejecutables
     - [x] Async/await patterns correctos
     - [x] Type hints completos
+    - [x] Degraded mode implementado en todos los clients
     - [x] Performance optimizations documentadas
     
   business_alignment:

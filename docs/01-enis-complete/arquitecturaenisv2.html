@@ -39,8 +39,27 @@
       <h3>🔐 Principios de Seguridad y Data Sovereignty</h3>
       <p><b>Edge (Cliente):</b> NOPS Kernel + Edge Agents + Event Bus (Redis Streams)</p>
       <p><b>Cloud (ENIS):</b> Inference Service + Macro-módulos + Marketplace</p>
-      <p><b>Data Policy:</b> Los datos crudos <u>no</u> salen del cliente. Solo viajan <i>features/minimizados</i> según política.</p>
-      <p><b>Security:</b> mTLS + JWT s2s + API Keys + RBAC en todos los canales</p>
+      <p><b>Data Policy:</b> Los datos crudos <u>no</u> salen del cliente. Solo viajan <i>features/vectores minimizados</i> según política (PII redaction + minimization obligatoria).</p>
+      <p><b>Security por Canal:</b></p>
+      <ul style="margin:8px 0;padding-left:20px;line-height:1.6">
+        <li>🟤🟡🟢 Zero/Shared/Lite → Kernel: <b>API Keys + TLS 1.3</b></li>
+        <li>🔵🔴 Enterprise/Air-Gap → Kernel: <b>mTLS + Certificate Auth</b></li>
+        <li>Kernel ↔ Cloud: <b>mTLS + JWT s2s</b> + scoped endpoints</li>
+        <li>Users → Sistema: <b>JWT + RBAC/ABAC</b> + MFA (tier 3)</li>
+        <li>Audit Trail: <b>Mandatory + immutable</b> en TODOS los canales</li>
+        <li>🔐 <b>SEC (Signed Execution Contract)</b>: Firma criptográfica + validación de binarios/contenedores + SBOM + Audit Trail (S13.5 - <b>CRÍTICO para GA</b>)</li>
+      </ul>
+      <p style="margin-top:8px;font-size:0.9em;opacity:0.85"><i>Estado: JWT ✅, RBAC ✅, API Keys básico ✅ | En desarrollo: API Keys Rotation (S11), mTLS Everywhere (S13), <b>SEC Supply Chain (S13.5)</b></i></p>
+    </div>
+
+    <div class="policy-box" style="background:#e8f5e9;border-left-color:#4caf50;">
+      <strong>📁 Organización de Repositorios ENIS v3.0:</strong><br/>
+      <b>cloud-core/</b> (5 repos): asm-service, awe-service, cgn-service, inference-service, shif-service<br/>
+      <b>cloud-ops/</b> (1 repo): cloud-infrastructure<br/>
+      <b>edge/</b> (3 repos): nops-kernel, edge-agents, edge-infrastructure<br/>
+      <b>platform/</b> (2 repos): agent-marketplace, enis-frontend<br/>
+      <b>shared/</b> (3 repos): agent-contracts, agent-sdks, enis-infrastructure<br/>
+      <strong>Total:</strong> 14 repositorios independientes + docs/
     </div>
 
     <div class="policy-box">
@@ -58,11 +77,20 @@
       <button onclick="changeLayout('breadthfirst')">📊 Vista Jerárquica</button>
       <button onclick="changeLayout('grid')">⚡ Vista Grid</button>
       <button onclick="changeLayout('cose')">🌐 Vista Orgánica</button>
+    </div>
+    <div class="controls" style="border-top:1px solid #ddd;padding-top:12px;margin-top:-10px;">
       <button onclick="highlightClientSide()">🏢 Edge/Cliente</button>
       <button onclick="highlightCloudSide()">☁️ Cloud/Plataforma</button>
       <button onclick="highlightSecurity()">🔐 Canales Seguros</button>
       <button onclick="airgappedView()">🧱 Vista Air-Gapped</button>
       <button onclick="highlightAdvancedInterfaces()">🚀 Interfaces Avanzadas</button>
+    </div>
+    <div class="controls" style="border-top:1px solid #ddd;padding-top:12px;margin-top:-10px;background:#f1f8e9;">
+      <button onclick="highlightRepositories()" style="background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%)">📦 Ver Todos los Repos</button>
+      <button onclick="highlightEdgeRepos()">⚡ Edge Repos</button>
+      <button onclick="highlightCloudRepos()">☁️ Cloud Repos</button>
+      <button onclick="highlightPlatformRepos()">🛒 Platform Repos</button>
+      <button onclick="highlightSharedRepos()">📦 Shared Repos</button>
     </div>
 
     <div id="cy"></div>
@@ -119,9 +147,45 @@
           <div class="legend-item"><div class="legend-color" style="background:#2C3E50"></div><span>⛓️ Blockchain Ledger (S20) - Smart Contracts</span></div>
         </div>
 
+        <div class="legend-section">
+          <h4>📦 Repositorios SHARED (3)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#607D8B"></div><span>agent-contracts - Schemas/Proto</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#607D8B"></div><span>agent-sdks - Python/Go/TS</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#607D8B"></div><span>enis-infrastructure - IaC/K8s</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>⚡ Repositorios EDGE (3)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#6B46C1"></div><span>nops-kernel - Python 3.11+</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#00BCD4"></div><span>edge-agents - 5 tipos</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#00897B"></div><span>edge-infrastructure - K3s/Docker</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>☁️ Repositorios CLOUD-CORE (5)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#E91E63"></div><span>asm-service - Adaptive State</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9C27B0"></div><span>cgn-service - Causal Graph</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#3F51B5"></div><span>awe-service - Workflow Evo</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#009688"></div><span>shif-service - Integration</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#FF8C42"></div><span>inference-service - LLM Router</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>🔧 Repositorios CLOUD-OPS (1)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#546E7A"></div><span>cloud-infrastructure - Terraform/Helm</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>🛒 Repositorios PLATFORM (2)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#4ECDC4"></div><span>agent-marketplace - Public/Private</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#F39C12"></div><span>enis-frontend - Next.js</span></div>
+        </div>
+
         <div class="legend-note">
-          🟣 <b>Nota:</b> Los módulos morados (Observability, Scorecard, Billing, Sandbox, Compliance) son <b>servicios de plataforma fuera del kernel</b> (repos separados). El kernel se comunica vía APIs/eventos y puede operar sin ellos.<br/>
-          🚀 <b>Interfaces Avanzadas:</b> Voice (S16) y XR (S17) son extensiones del Inference Service. MCP Gateway (S21) y Blockchain (S20) son extensiones del NOPS Kernel. Todas son opcionales y se activan por feature flags.
+          ⚡ <b>Principio SLIM:</b> El NOPS Kernel mantiene SOLO el core ligero (< 100MB RAM): Agent Registry, Event Bus, Policy Engine, Routing, Security. Los módulos pesados viven en <b>cloud-core/</b> como microservicios independientes.<br/>
+          🟣 <b>Módulos Morados:</b> Los servicios morados (Observability, Scorecard, Billing, Sandbox, Compliance) son <b>microservicios en cloud-core/</b> (repos a crear post-GA). El kernel usa <b>API clients ligeros</b> con mTLS + JWT s2s. El kernel puede operar en <b>degraded mode</b> sin estos servicios (crítico para air-gapped).<br/>
+          🚀 <b>Interfaces Avanzadas:</b> Voice (S16) y XR (S17) son extensiones del Inference Service. MCP Gateway (S21) y Blockchain (S20) son extensiones del NOPS Kernel. Todas son opcionales y se activan por feature flags.<br/>
+          📦 <b>Repositorios:</b> La arquitectura se divide en <b>14 repositorios independientes</b> organizados en 5 categorías: <b>shared/</b> (base común), <b>edge/</b> (componentes cliente), <b>cloud-core/</b> (servicios principales), <b>cloud-ops/</b> (infraestructura), <b>platform/</b> (marketplace y frontend). Los repos con bordes punteados "implementan" o "despliegan" los componentes lógicos con bordes sólidos.
         </div>
       </div>
     </div>
@@ -144,6 +208,11 @@
           { selector:'node[layer="cloud"]',  style:{ 'shape':'hexagon','background-opacity':.95 } },
           { selector:'node[layer="marketplace"]', style:{ 'shape':'diamond','background-opacity':.9 } },
           { selector:'node[layer="external"]', style:{ 'shape':'ellipse','background-opacity':.88 } },
+          { selector:'node[layer="shared"]', style:{ 'shape':'octagon','background-opacity':.92,'border-width':4 } },
+          { selector:'node[layer="repo-edge"]', style:{ 'shape':'round-rectangle','background-opacity':.88,'border-style':'dashed' } },
+          { selector:'node[layer="repo-cloud"]', style:{ 'shape':'hexagon','background-opacity':.88,'border-style':'dashed' } },
+          { selector:'node[layer="repo-ops"]', style:{ 'shape':'round-octagon','background-opacity':.88,'border-style':'dashed' } },
+          { selector:'node[layer="repo-platform"]', style:{ 'shape':'diamond','background-opacity':.88,'border-style':'dashed' } },
           { selector:'edge', style:{
               'width':2,'line-color':'data(color)','target-arrow-color':'data(color)','target-arrow-shape':'triangle',
               'curve-style':'bezier','label':'data(label)','font-size':'9px','text-rotation':'autorotate','text-margin-y':-10,'opacity':.9
@@ -204,7 +273,33 @@
             { data:{ id:'mcp_gateway', label:'🔌 MCP Gateway\nJSON-RPC\nTool Discovery', layer:'client', color:'#27AE60', size:70 }, position:{x:420,y:720}},
 
             // Blockchain Verifiability (S20)
-            { data:{ id:'blockchain_ledger', label:'⛓️ Blockchain\nLedger Integration\nSmart Contracts', layer:'cloud', color:'#2C3E50', size:70 }, position:{x:1240,y:650}}
+            { data:{ id:'blockchain_ledger', label:'⛓️ Blockchain\nLedger Integration\nSmart Contracts', layer:'cloud', color:'#2C3E50', size:70 }, position:{x:1240,y:650}},
+
+            // ============ REPOSITORIOS ENIS v3.0 ============
+            
+            // SHARED (Base común)
+            { data:{ id:'repo_contracts', label:'📦 agent-contracts\nSchemas/Proto\nShared', layer:'shared', color:'#607D8B', size:65 }, position:{x:1450,y:200}},
+            { data:{ id:'repo_sdks', label:'📦 agent-sdks\nPython/Go/TS\nShared', layer:'shared', color:'#607D8B', size:65 }, position:{x:1450,y:280}},
+            { data:{ id:'repo_infra', label:'📦 enis-infrastructure\nIaC/K8s\nShared', layer:'shared', color:'#607D8B', size:65 }, position:{x:1450,y:360}},
+            
+            // CLOUD-CORE (Servicios principales)
+            { data:{ id:'repo_asm', label:'☁️ asm-service\nAdaptive State\nCloud-Core', layer:'repo-cloud', color:'#E91E63', size:68 }, position:{x:1450,y:450}},
+            { data:{ id:'repo_cgn', label:'☁️ cgn-service\nCausal Graph\nCloud-Core', layer:'repo-cloud', color:'#9C27B0', size:68 }, position:{x:1450,y:520}},
+            { data:{ id:'repo_awe', label:'☁️ awe-service\nWorkflow Evo\nCloud-Core', layer:'repo-cloud', color:'#3F51B5', size:68 }, position:{x:1450,y:590}},
+            { data:{ id:'repo_shif', label:'☁️ shif-service\nIntegration\nCloud-Core', layer:'repo-cloud', color:'#009688', size:68 }, position:{x:1450,y:660}},
+            { data:{ id:'repo_inference', label:'☁️ inference-service\nLLM Router\nCloud-Core', layer:'repo-cloud', color:'#FF8C42', size:75 }, position:{x:1450,y:730}},
+            
+            // CLOUD-OPS
+            { data:{ id:'repo_cloud_infra', label:'🔧 cloud-infrastructure\nTerraform/Helm\nCloud-Ops', layer:'repo-ops', color:'#546E7A', size:68 }, position:{x:80,y:100}},
+            
+            // EDGE (Componentes edge)
+            { data:{ id:'repo_nops', label:'⚡ nops-kernel\nPython 3.11+\nEdge', layer:'repo-edge', color:'#6B46C1', size:75 }, position:{x:80,y:420}},
+            { data:{ id:'repo_edge_agents', label:'⚡ edge-agents\n5 tipos\nEdge', layer:'repo-edge', color:'#00BCD4', size:68 }, position:{x:80,y:330}},
+            { data:{ id:'repo_edge_infra', label:'⚡ edge-infrastructure\nK3s/Docker\nEdge', layer:'repo-edge', color:'#00897B', size:68 }, position:{x:80,y:510}},
+            
+            // PLATFORM
+            { data:{ id:'repo_marketplace', label:'🛒 agent-marketplace\nPublic/Private\nPlatform', layer:'repo-platform', color:'#4ECDC4', size:68 }, position:{x:80,y:620}},
+            { data:{ id:'repo_frontend', label:'🎨 enis-frontend\nNext.js\nPlatform', layer:'repo-platform', color:'#F39C12', size:68 }, position:{x:80,y:710}}
           ],
           edges: [
             // Agents -> Kernel
@@ -275,7 +370,48 @@
 
             // Blockchain Verifiability (S20)
             { data:{ source:'nops', target:'blockchain_ledger', label:'Proof Exchange\nS20', security:'mtls', optional:'true', color:'#2C3E50' } },
-            { data:{ source:'blockchain_ledger', target:'mod_compliance', label:'Regulatory\nReporting', security:'internal', color:'#2C3E50' } }
+            { data:{ source:'blockchain_ledger', target:'mod_compliance', label:'Regulatory\nReporting', security:'internal', color:'#2C3E50' } },
+
+            // ============ REPOSITORIOS -> COMPONENTES LÓGICOS ============
+            
+            // SHARED repos -> Components
+            { data:{ source:'repo_contracts', target:'contracts', label:'define', security:'internal', color:'#607D8B' } },
+            { data:{ source:'repo_sdks', target:'contracts', label:'implementa', security:'internal', color:'#607D8B' } },
+            { data:{ source:'repo_contracts', target:'nops', label:'schemas', security:'internal', color:'#607D8B', optional:'true' } },
+            { data:{ source:'repo_contracts', target:'inference', label:'schemas', security:'internal', color:'#607D8B', optional:'true' } },
+            
+            // EDGE repos -> Components
+            { data:{ source:'repo_nops', target:'nops', label:'implementa', security:'internal', color:'#6B46C1' } },
+            { data:{ source:'repo_edge_agents', target:'zero', label:'builds', security:'internal', color:'#00BCD4', optional:'true' } },
+            { data:{ source:'repo_edge_agents', target:'shared', label:'builds', security:'internal', color:'#00BCD4', optional:'true' } },
+            { data:{ source:'repo_edge_agents', target:'lite', label:'builds', security:'internal', color:'#00BCD4', optional:'true' } },
+            { data:{ source:'repo_edge_agents', target:'enterprise', label:'builds', security:'internal', color:'#00BCD4', optional:'true' } },
+            { data:{ source:'repo_edge_agents', target:'airgapped', label:'builds', security:'internal', color:'#00BCD4', optional:'true' } },
+            { data:{ source:'repo_edge_infra', target:'nops', label:'deploys', security:'internal', color:'#00897B', optional:'true' } },
+            
+            // CLOUD-CORE repos -> Modules
+            { data:{ source:'repo_asm', target:'asm', label:'implementa', security:'internal', color:'#E91E63' } },
+            { data:{ source:'repo_cgn', target:'cgn', label:'implementa', security:'internal', color:'#9C27B0' } },
+            { data:{ source:'repo_awe', target:'awe', label:'implementa', security:'internal', color:'#3F51B5' } },
+            { data:{ source:'repo_shif', target:'shif', label:'implementa', security:'internal', color:'#009688' } },
+            { data:{ source:'repo_inference', target:'inference', label:'implementa', security:'internal', color:'#FF8C42' } },
+            
+            // CLOUD-OPS repo -> Infrastructure
+            { data:{ source:'repo_cloud_infra', target:'inference', label:'deploy/ops', security:'internal', color:'#546E7A', optional:'true' } },
+            { data:{ source:'repo_cloud_infra', target:'asm', label:'deploy', security:'internal', color:'#546E7A', optional:'true' } },
+            { data:{ source:'repo_cloud_infra', target:'cgn', label:'deploy', security:'internal', color:'#546E7A', optional:'true' } },
+            { data:{ source:'repo_cloud_infra', target:'awe', label:'deploy', security:'internal', color:'#546E7A', optional:'true' } },
+            { data:{ source:'repo_cloud_infra', target:'shif', label:'deploy', security:'internal', color:'#546E7A', optional:'true' } },
+            
+            // PLATFORM repos -> Components
+            { data:{ source:'repo_marketplace', target:'marketplace', label:'implementa', security:'internal', color:'#4ECDC4' } },
+            { data:{ source:'repo_marketplace', target:'private', label:'registry', security:'internal', color:'#4ECDC4' } },
+            { data:{ source:'repo_marketplace', target:'devportal', label:'portal', security:'internal', color:'#4ECDC4' } },
+            { data:{ source:'repo_frontend', target:'studio', label:'implementa', security:'internal', color:'#F39C12' } },
+            
+            // Shared infrastructure connections
+            { data:{ source:'repo_infra', target:'repo_cloud_infra', label:'extends', security:'internal', color:'#607D8B', optional:'true' } },
+            { data:{ source:'repo_infra', target:'repo_edge_infra', label:'extends', security:'internal', color:'#607D8B', optional:'true' } }
           ]
         },
         layout:{ name:'preset', animate:true, animationDuration:900 }
@@ -344,6 +480,91 @@
             t.includes('voice') || t.includes('xr') || t.includes('mcp') || t.includes('blockchain')) ||
            (s==='inference' && (t.includes('voice') || t.includes('xr'))) ||
            (s==='nops' && (t.includes('mcp') || t.includes('blockchain')))) {
+          e.removeClass('faded');
+        }
+      });
+    }
+
+    // ============ FUNCIONES PARA VISUALIZACIÓN DE REPOSITORIOS ============
+    
+    function highlightRepositories(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      // Mostrar todos los nodos de repositorios
+      cy.nodes('[layer="shared"],[layer="repo-edge"],[layer="repo-cloud"],[layer="repo-ops"],[layer="repo-platform"]').removeClass('faded').addClass('highlighted');
+      // Mostrar componentes relacionados
+      cy.nodes('[layer="client"],[layer="cloud"],[layer="marketplace"]').removeClass('faded');
+      // Mostrar edges de implementación
+      cy.edges().forEach(e=>{
+        const s=e.source().id(), t=e.target().id();
+        if(s.startsWith('repo_') || t.startsWith('repo_')) {
+          e.removeClass('faded');
+        }
+      });
+    }
+    
+    function highlightEdgeRepos(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      // Repos edge
+      cy.nodes('[layer="repo-edge"]').removeClass('faded').addClass('highlighted');
+      // Componentes edge relacionados
+      cy.$('#nops,#eventbus,#zero,#shared,#lite,#enterprise,#airgapped').removeClass('faded');
+      // Edges relevantes
+      cy.edges().forEach(e=>{
+        const s=e.source().id(), t=e.target().id();
+        if((s==='repo_nops' || s==='repo_edge_agents' || s==='repo_edge_infra') ||
+           (t==='repo_nops' || t==='repo_edge_agents' || t==='repo_edge_infra')) {
+          e.removeClass('faded');
+        }
+      });
+    }
+    
+    function highlightCloudRepos(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      // Repos cloud-core
+      cy.nodes('[layer="repo-cloud"]').removeClass('faded').addClass('highlighted');
+      // Módulos cloud relacionados
+      cy.$('#inference,#asm,#cgn,#awe,#shif').removeClass('faded');
+      // Edges relevantes
+      cy.edges().forEach(e=>{
+        const s=e.source().id(), t=e.target().id();
+        if(s.startsWith('repo_') && (s.includes('asm')||s.includes('cgn')||s.includes('awe')||s.includes('shif')||s.includes('inference'))) {
+          e.removeClass('faded');
+        }
+      });
+    }
+    
+    function highlightPlatformRepos(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      // Repos platform
+      cy.nodes('[layer="repo-platform"]').removeClass('faded').addClass('highlighted');
+      // Componentes platform
+      cy.$('#marketplace,#private,#devportal,#studio').removeClass('faded');
+      // Edges relevantes
+      cy.edges().forEach(e=>{
+        const s=e.source().id(), t=e.target().id();
+        if(s==='repo_marketplace' || s==='repo_frontend' || t==='repo_marketplace' || t==='repo_frontend') {
+          e.removeClass('faded');
+        }
+      });
+    }
+    
+    function highlightSharedRepos(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      // Repos shared
+      cy.nodes('[layer="shared"]').removeClass('faded').addClass('highlighted');
+      // Componente contracts
+      cy.$('#contracts').removeClass('faded');
+      // Todos los componentes que usan shared
+      cy.$('#nops,#inference').removeClass('faded');
+      // Edges relevantes
+      cy.edges().forEach(e=>{
+        const s=e.source().id(), t=e.target().id();
+        if(s.startsWith('repo_') && (s.includes('contracts')||s.includes('sdks')||s.includes('infra'))) {
           e.removeClass('faded');
         }
       });
