@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ENIS Architecture v3.0 - Production Ready</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+  <style>
+    body{margin:0;padding:20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+    .container{max-width:1600px;margin:0 auto;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+    .header{background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);color:#fff;padding:30px;text-align:center}
+    .header h1{margin:0;font-size:2.2em;font-weight:600}
+    .header p{margin:10px 0 0;opacity:.9}
+    #cy{width:100%;height:900px;background:linear-gradient(to bottom,#f8f9fa,#e9ecef)}
+    .legend{padding:20px 30px;background:#fff;border-top:1px solid #e0e0e0}
+    .legend h3{margin:0 0 15px;color:#333}
+    .legend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:15px}
+    .legend-section{background:#f8f9fa;padding:15px;border-radius:8px}
+    .legend-section h4{margin:0 0 10px;color:#555;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+    .legend-item{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+    .legend-color{width:22px;height:22px;border-radius:5px;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .legend-note{grid-column:1 / -1;background:#e9f7ef;border-left:4px solid #2ecc71;padding:12px;border-radius:8px;color:#2c3e50;font-size:13px}
+    .controls{padding:16px 24px;background:#f8f9fa;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    button{padding:10px 16px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;transition:.2s}
+    button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
+    .info-panel{padding:18px 24px;background:#e3f2fd;border-left:4px solid #2196f3;margin:20px 24px;border-radius:8px}
+    .info-panel h3{margin:0 0 8px;color:#1976d2}
+    .policy-box{background:#fff3e0;padding:14px;margin:20px 24px;border-radius:8px;border-left:4px solid #ff9800;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 ENIS v3.0 — Enterprise Neural Intelligence Systems</h1>
+      <p>Arquitectura Production-Ready: Edge-First + Cloud Intelligence + Data Sovereignty</p>
+    </div>
+
+    <div class="info-panel">
+      <h3>🔐 Principios de Seguridad y Data Sovereignty</h3>
+      <p><b>Edge (Cliente):</b> NOPS Kernel + Edge Agents + Event Bus (Redis Streams)</p>
+      <p><b>Cloud (ENIS):</b> Inference Service + Macro-módulos + Marketplace</p>
+      <p><b>Data Policy:</b> Los datos crudos <u>no</u> salen del cliente. Solo viajan <i>features/minimizados</i> según política.</p>
+      <p><b>Security:</b> mTLS + JWT s2s + API Keys + RBAC en todos los canales</p>
+    </div>
+
+    <div class="policy-box">
+      <strong>data_egress_policy:</strong><br/>
+      raw_data: "forbidden"<br/>
+      derived_signals: "allow_if_policy"<br/>
+      requires: [pii_redaction: true, minimization: true, tenant_scoped: true, mTLS: true, s2s_scopes: ["inference.execute","marketplace.sync"] ]<br/>
+      rate_limits: { per_tenant: "enforced", per_agent: "enforced" }<br/>
+      audit_log: "mandatory"
+    </div>
+
+    <div class="controls">
+      <button onclick="resetView()">🔄 Reset Vista</button>
+      <button onclick="toggleLabels()">🏷️ Toggle Labels</button>
+      <button onclick="changeLayout('breadthfirst')">📊 Vista Jerárquica</button>
+      <button onclick="changeLayout('grid')">⚡ Vista Grid</button>
+      <button onclick="changeLayout('cose')">🌐 Vista Orgánica</button>
+      <button onclick="highlightClientSide()">🏢 Edge/Cliente</button>
+      <button onclick="highlightCloudSide()">☁️ Cloud/Plataforma</button>
+      <button onclick="highlightSecurity()">🔐 Canales Seguros</button>
+      <button onclick="airgappedView()">🧱 Vista Air-Gapped</button>
+      <button onclick="highlightAdvancedInterfaces()">🚀 Interfaces Avanzadas</button>
+    </div>
+
+    <div id="cy"></div>
+
+    <div class="legend">
+      <h3>📖 Leyenda</h3>
+      <div class="legend-grid">
+        <div class="legend-section">
+          <h4>Edge Agents (Cliente)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#8B4513"></div><span>🟤 Zero Agent — Webhooks (API-Key)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#FFD700"></div><span>🟡 Shared Edge — Multi-tenant (API-Key)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#32CD32"></div><span>🟢 Edge Lite — Docker (API-Key)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#1E90FF"></div><span>🔵 Enterprise — K8s (mTLS)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#DC143C"></div><span>🔴 Air-Gapped — Zero Egress</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>Core en Cliente</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#6B46C1"></div><span>NOPS Kernel (Control Plane)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#C0392B"></div><span>Event Bus (Redis Streams)</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>Plataforma (Cloud/Servicios fuera del Kernel)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#FF8C42"></div><span>Inference Service (Cloud Brain)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Observability Module</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Scorecard Module</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Billing Module</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Sandbox Module</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Compliance Module</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#34495E"></div><span>enis-contracts (Schemas/SDK)</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>Canales y Seguridad</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#3498DB"></div><span>API-Key (Agents→Kernel)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>JWT + RBAC (Users→Kernel)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#E74C3C"></div><span>mTLS + JWT s2s (Kernel↔Cloud)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#95A5A6"></div><span>Opcional / By-Policy (línea punteada)</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>Marketplace & Apps</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#4ECDC4"></div><span>Agent Marketplace (Cloud)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#16A085"></div><span>Marketplace Connector (Edge)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#F39C12"></div><span>Studio App (External)</span></div>
+        </div>
+
+        <div class="legend-section">
+          <h4>Interfaces Avanzadas (S16-S21)</h4>
+          <div class="legend-item"><div class="legend-color" style="background:#E67E22"></div><span>🎤 Voice Interface (S16) - STT/VAD/TTS</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#8E44AD"></div><span>🥽 XR Interface (S17) - Spatial/Gesture</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#27AE60"></div><span>🔌 MCP Gateway (S21) - JSON-RPC</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#2C3E50"></div><span>⛓️ Blockchain Ledger (S20) - Smart Contracts</span></div>
+        </div>
+
+        <div class="legend-note">
+          🟣 <b>Nota:</b> Los módulos morados (Observability, Scorecard, Billing, Sandbox, Compliance) son <b>servicios de plataforma fuera del kernel</b> (repos separados). El kernel se comunica vía APIs/eventos y puede operar sin ellos.<br/>
+          🚀 <b>Interfaces Avanzadas:</b> Voice (S16) y XR (S17) son extensiones del Inference Service. MCP Gateway (S21) y Blockchain (S20) son extensiones del NOPS Kernel. Todas son opcionales y se activan por feature flags.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cy, labelsVisible = true;
+
+    function initCytoscape(){
+      cy = cytoscape({
+        container: document.getElementById('cy'),
+        style: [
+          { selector:'node', style:{
+              'label':'data(label)','text-valign':'center','text-halign':'center',
+              'background-color':'data(color)','width':'data(size)','height':'data(size)',
+              'font-size':'11px','color':'#fff','text-outline-width':1,'text-outline-color':'data(color)',
+              'border-width':3,'border-color':'#fff','font-weight':'bold','text-wrap':'wrap','text-max-width':'120px'
+          }},
+          { selector:'node[layer="client"]', style:{ 'shape':'round-rectangle','background-opacity':.92 } },
+          { selector:'node[layer="cloud"]',  style:{ 'shape':'hexagon','background-opacity':.95 } },
+          { selector:'node[layer="marketplace"]', style:{ 'shape':'diamond','background-opacity':.9 } },
+          { selector:'node[layer="external"]', style:{ 'shape':'ellipse','background-opacity':.88 } },
+          { selector:'edge', style:{
+              'width':2,'line-color':'data(color)','target-arrow-color':'data(color)','target-arrow-shape':'triangle',
+              'curve-style':'bezier','label':'data(label)','font-size':'9px','text-rotation':'autorotate','text-margin-y':-10,'opacity':.9
+          }},
+          { selector:'edge[security="apikey"]', style:{ 'line-color':'#3498DB','width':2 } },
+          { selector:'edge[security="jwt"]',    style:{ 'line-color':'#9B59B6','width':3 } },
+          { selector:'edge[security="mtls"]',   style:{ 'line-color':'#E74C3C','width':4 } },
+          { selector:'edge[optional="true"]',   style:{ 'line-style':'dashed','opacity':.45 } },
+          { selector:'.highlighted', style:{ 'background-color':'#FFD700','border-color':'#FFA500','border-width':5,'z-index':999 } },
+          { selector:'.faded', style:{ 'opacity':.15,'text-opacity':0 } },
+          { selector:'.security-highlight', style:{ 'border-width':5,'border-color':'#E74C3C','background-blacken':-0.2 } },
+          { selector:'edge.security-highlight', style:{ 'width':6,'opacity':1,'line-color':'#E74C3C','target-arrow-color':'#E74C3C','z-index':999 } }
+        ],
+        elements: {
+          nodes: [
+            // Edge / Cliente
+            { data:{ id:'nops', label:'NOPS Kernel\nControl Plane\nPython 3.11+', layer:'client', color:'#6B46C1', size:100 }, position:{x:420,y:420}},
+            { data:{ id:'eventbus', label:'Event Bus\nRedis Streams\nDLQ/Idempotency', layer:'client', color:'#C0392B', size:70 }, position:{x:420,y:270}},
+            { data:{ id:'zero', label:'🟤 Zero Agent\nWebhooks', layer:'client', color:'#8B4513', size:65 }, position:{x:150,y:220}},
+            { data:{ id:'shared', label:'🟡 Shared Edge\nMulti-tenant', layer:'client', color:'#FFD700', size:65 }, position:{x:150,y:310}},
+            { data:{ id:'lite', label:'🟢 Edge Lite\nDocker', layer:'client', color:'#32CD32', size:65 }, position:{x:150,y:400}},
+            { data:{ id:'enterprise', label:'🔵 Enterprise\nKubernetes', layer:'client', color:'#1E90FF', size:65 }, position:{x:150,y:490}},
+            { data:{ id:'airgapped', label:'🔴 Air-Gapped\nZero Egress', layer:'client', color:'#DC143C', size:65 }, position:{x:150,y:580}},
+            { data:{ id:'datasources', label:'Data Sources\nERP/CRM/IoT', layer:'client', color:'#95A5A6', size:75 }, position:{x:420,y:600}},
+            { data:{ id:'mp_connector', label:'Marketplace\nConnector\nCache/Mirror', layer:'client', color:'#16A085', size:60 }, position:{x:270,y:470}},
+            { data:{ id:'policy', label:'Policy Engine\nABAC/Scopes\nQuotas/Audit', layer:'client', color:'#8E44AD', size:65 }, position:{x:660,y:420}},
+            { data:{ id:'eventbridge', label:'Event Bridge\n(Optional)\nKafka/NATS', layer:'client', color:'#2ECC71', size:60 }, position:{x:640,y:270}},
+
+            // Cloud / Plataforma
+            { data:{ id:'inference', label:'🧠 Inference\nService\nCloud Brain', layer:'cloud', color:'#FF8C42', size:110 }, position:{x:960,y:420}},
+            { data:{ id:'asm', label:'ASM\nSchema/State', layer:'cloud', color:'#E91E63', size:80 }, position:{x:1240,y:270}},
+            { data:{ id:'cgn', label:'CGN\nCausal Graph', layer:'cloud', color:'#9C27B0', size:80 }, position:{x:1240,y:360}},
+            { data:{ id:'awe', label:'AWE\nWorkflow Evo', layer:'cloud', color:'#3F51B5', size:80 }, position:{x:1240,y:450}},
+            { data:{ id:'shif', label:'SHIF\nIntegration', layer:'cloud', color:'#009688', size:80 }, position:{x:1240,y:540}},
+
+            // Módulos fuera del kernel
+            { data:{ id:'mod_obsv', label:'Observability\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:880,y:200}},
+            { data:{ id:'mod_score', label:'Scorecard\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:990,y:170}},
+            { data:{ id:'mod_bill', label:'Billing\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:1100,y:200}},
+            { data:{ id:'mod_sandbox', label:'Sandbox\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:1080,y:640}},
+            { data:{ id:'mod_compliance', label:'Compliance\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:940,y:640}},
+
+            // Contratos / SDK
+            { data:{ id:'contracts', label:'enis-contracts\nSchemas / SDK', layer:'cloud', color:'#34495E', size:70 }, position:{x:960,y:300}},
+
+            // Marketplace y Studio
+            { data:{ id:'marketplace', label:'Agent Marketplace\n(Cloud)', layer:'marketplace', color:'#4ECDC4', size:85 }, position:{x:960,y:110}},
+            { data:{ id:'private', label:'Private Registry', layer:'marketplace', color:'#5F27CD', size:70 }, position:{x:1110,y:90}},
+            { data:{ id:'devportal', label:'Developer Portal', layer:'marketplace', color:'#F7B731', size:70 }, position:{x:810,y:90}},
+            { data:{ id:'studio', label:'Studio App\nUI/IDE (External)', layer:'external', color:'#F39C12', size:65 }, position:{x:640,y:660}},
+            { data:{ id:'cloudbus', label:'Cloud Bus\nKafka/NATS (opt)', layer:'cloud', color:'#2ECC71', size:60 }, position:{x:780,y:260}},
+
+            // Interfaces Avanzadas (S16-S17)
+            { data:{ id:'voice_interface', label:'🎤 Voice Interface\nSTT/VAD/TTS\nTTFT <300ms', layer:'cloud', color:'#E67E22', size:75 }, position:{x:960,y:550}},
+            { data:{ id:'xr_interface', label:'🥽 XR Interface\nSpatial/Gesture\n30Hz <50ms jitter', layer:'cloud', color:'#8E44AD', size:75 }, position:{x:960,y:650}},
+
+            // MCP Gateway (S21)
+            { data:{ id:'mcp_gateway', label:'🔌 MCP Gateway\nJSON-RPC\nTool Discovery', layer:'client', color:'#27AE60', size:70 }, position:{x:420,y:720}},
+
+            // Blockchain Verifiability (S20)
+            { data:{ id:'blockchain_ledger', label:'⛓️ Blockchain\nLedger Integration\nSmart Contracts', layer:'cloud', color:'#2C3E50', size:70 }, position:{x:1240,y:650}}
+          ],
+          edges: [
+            // Agents -> Kernel
+            { data:{ source:'zero', target:'nops', label:'API-Key', security:'apikey', color:'#3498DB' } },
+            { data:{ source:'shared', target:'nops', label:'API-Key', security:'apikey', color:'#3498DB' } },
+            { data:{ source:'lite', target:'nops', label:'API-Key', security:'apikey', color:'#3498DB' } },
+            { data:{ source:'enterprise', target:'nops', label:'mTLS', security:'mtls', color:'#E74C3C' } },
+            { data:{ source:'airgapped', target:'nops', label:'Local Only', security:'apikey', color:'#DC143C' } },
+
+            // Kernel core
+            { data:{ source:'nops', target:'eventbus', label:'pub/sub', security:'internal', color:'#C0392B' } },
+            { data:{ source:'datasources', target:'nops', label:'Local Process', security:'internal', color:'#95A5A6' } },
+
+            // Marketplace connector
+            { data:{ source:'nops', target:'mp_connector', label:'Registry sync (edge)', security:'internal', color:'#16A085' } },
+            { data:{ source:'mp_connector', target:'marketplace', label:'mTLS (marketplace.sync)', security:'mtls', optional:'true', color:'#16A085' } },
+
+            // Policy -> Inference (default)
+            { data:{ source:'nops', target:'policy', label:'Decide/Egress', security:'internal', color:'#8E44AD' } },
+            { data:{ source:'policy', target:'inference', label:'mTLS + JWT s2s\nmetadata only', security:'mtls', color:'#E74C3C' } },
+
+            // Optional: direct Zero -> Inference
+            { data:{ source:'zero', target:'inference', label:'mTLS allowlist (opt)', security:'mtls', optional:'true', color:'#95A5A6' } },
+
+            // Event Bridge (opt)
+            { data:{ source:'eventbus', target:'eventbridge', label:'bridge', optional:'true', color:'#2ECC71' } },
+            { data:{ source:'eventbridge', target:'cloudbus', label:'mTLS', security:'mtls', optional:'true', color:'#2ECC71' } },
+
+            // Inference -> Macro módulos
+            { data:{ source:'inference', target:'asm', label:'schema/state', security:'internal', color:'#FF8C42' } },
+            { data:{ source:'inference', target:'cgn', label:'causal', security:'internal', color:'#FF8C42' } },
+            { data:{ source:'inference', target:'awe', label:'workflow', security:'internal', color:'#FF8C42' } },
+            { data:{ source:'inference', target:'shif', label:'integrations', security:'internal', color:'#FF8C42' } },
+
+            // Contratos / SDK
+            { data:{ source:'nops', target:'contracts', label:'client stubs', security:'mtls', optional:'true', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_obsv', label:'API/Proto', security:'internal', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_score', label:'API/Proto', security:'internal', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_bill', label:'API/Proto', security:'internal', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_sandbox', label:'API/Proto', security:'internal', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_compliance', label:'API/Proto', security:'internal', color:'#34495E' } },
+
+            // Kernel -> módulos (fuera del kernel) s2s (punteado por política)
+            { data:{ source:'nops', target:'mod_obsv', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+            { data:{ source:'nops', target:'mod_score', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+            { data:{ source:'nops', target:'mod_bill', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+            { data:{ source:'nops', target:'mod_sandbox', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+            { data:{ source:'nops', target:'mod_compliance', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+
+            // Marketplace (cloud)
+            { data:{ source:'inference', target:'marketplace', label:'registry', security:'internal', color:'#4ECDC4' } },
+            { data:{ source:'marketplace', target:'private', label:'', security:'internal', color:'#4ECDC4' } },
+            { data:{ source:'marketplace', target:'devportal', label:'', security:'internal', color:'#4ECDC4' } },
+
+            // Studio
+            { data:{ source:'studio', target:'nops', label:'JWT + RBAC', security:'jwt', color:'#9B59B6' } },
+            { data:{ source:'studio', target:'inference', label:'API (opt)', security:'jwt', optional:'true', color:'#F39C12' } },
+
+            // Interfaces Avanzadas (S16-S17)
+            { data:{ source:'inference', target:'voice_interface', label:'Voice Engine\nS16', security:'internal', color:'#E67E22' } },
+            { data:{ source:'inference', target:'xr_interface', label:'XR Engine\nS17', security:'internal', color:'#8E44AD' } },
+            { data:{ source:'voice_interface', target:'studio', label:'Voice Console\nDemo', security:'jwt', optional:'true', color:'#E67E22' } },
+            { data:{ source:'xr_interface', target:'studio', label:'XR Panel\nDemo', security:'jwt', optional:'true', color:'#8E44AD' } },
+
+            // MCP Gateway (S21)
+            { data:{ source:'nops', target:'mcp_gateway', label:'MCP Server\nS21', security:'internal', color:'#27AE60' } },
+            { data:{ source:'mcp_gateway', target:'inference', label:'Tool Discovery\nJSON-RPC', security:'mtls', optional:'true', color:'#27AE60' } },
+
+            // Blockchain Verifiability (S20)
+            { data:{ source:'nops', target:'blockchain_ledger', label:'Proof Exchange\nS20', security:'mtls', optional:'true', color:'#2C3E50' } },
+            { data:{ source:'blockchain_ledger', target:'mod_compliance', label:'Regulatory\nReporting', security:'internal', color:'#2C3E50' } }
+          ]
+        },
+        layout:{ name:'preset', animate:true, animationDuration:900 }
+      });
+
+      // Interacción: foco temporal sobre vecindad
+      cy.on('tap','node', (evt)=>{
+        const node = evt.target;
+        const nb = node.neighborhood().add(node);
+        cy.elements().removeClass('faded highlighted security-highlight');
+        cy.elements().addClass('faded');
+        nb.removeClass('faded');
+        node.addClass('highlighted');
+        setTimeout(()=> cy.elements().removeClass('faded highlighted'), 2500);
+      });
+    }
+
+    function resetView(){ cy.fit(); cy.center(); cy.elements().removeClass('faded highlighted security-highlight'); }
+    function toggleLabels(){
+      labelsVisible=!labelsVisible;
+      cy.style().selector('node').style({'text-opacity':labelsVisible?1:0}).update();
+    }
+    function changeLayout(name){
+      let opt={name,animate:true,animationDuration:900};
+      if(name==='breadthfirst'){ opt.directed=true; opt.roots='#nops'; opt.spacingFactor=1.4; }
+      if(name==='grid'){ opt.rows=4; opt.cols=6; }
+      if(name==='cose'){ opt={name:'cose',nodeRepulsion:8000,idealEdgeLength:150,edgeElasticity:100,nestingFactor:5,gravity:80,numIter:900}; }
+      cy.layout(opt).run();
+    }
+    function highlightClientSide(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      cy.nodes('[layer="client"]').removeClass('faded');
+      cy.edges('[source="nops"],[target="nops"],[source="eventbus"]').removeClass('faded');
+    }
+    function highlightCloudSide(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      cy.nodes('[layer="cloud"],[layer="marketplace"]').removeClass('faded');
+      cy.edges('[source="inference"],[target="inference"],[source="marketplace"]').removeClass('faded');
+    }
+    function highlightSecurity(){
+      cy.elements().removeClass('highlighted faded');
+      cy.elements().addClass('faded');
+      cy.edges('[security="mtls"],[security="jwt"]').removeClass('faded').addClass('security-highlight');
+      cy.$('#nops,#inference,#policy,#eventbus,#mod_compliance').removeClass('faded').addClass('security-highlight');
+    }
+    function airgappedView(){
+      cy.elements().removeClass('highlighted security-highlight'); cy.elements().addClass('faded');
+      cy.nodes('[layer="client"]').removeClass('faded');
+      // mantener solo edges internos del cliente
+      cy.edges().forEach(e=>{
+        const s=e.source().data('layer'), t=e.target().data('layer');
+        if(s==='client' && t==='client') e.removeClass('faded');
+      });
+      cy.$('#airgapped').addClass('highlighted');
+    }
+    function highlightAdvancedInterfaces(){
+      cy.elements().removeClass('highlighted security-highlight');
+      cy.elements().addClass('faded');
+      cy.$('#voice_interface,#xr_interface,#mcp_gateway,#blockchain_ledger').removeClass('faded').addClass('highlighted');
+      cy.$('#inference,#nops').removeClass('faded');
+      cy.edges().forEach(e=>{
+        const s=e.source().id(), t=e.target().id();
+        if((s.includes('voice') || s.includes('xr') || s.includes('mcp') || s.includes('blockchain') || 
+            t.includes('voice') || t.includes('xr') || t.includes('mcp') || t.includes('blockchain')) ||
+           (s==='inference' && (t.includes('voice') || t.includes('xr'))) ||
+           (s==='nops' && (t.includes('mcp') || t.includes('blockchain')))) {
+          e.removeClass('faded');
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initCytoscape);
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+{
+  "files": {
+    "07-nops-master-prompt.md": {
+      "sha256": "ee1f4a6ada1a7cd1e54de35c2a039484b0d4e2d88e77751730c4acd009637b69",
+      "links": []
+    },
+    "nops-kernel/components/agent-runtime.md": {
+      "sha256": "341e4d1118e3c4abb1e71562701715b25a911f0ddb437fcde925c41698b4a422",
+      "links": []
+    },
+    "nops-kernel/components/security-manager.md": {
+      "sha256": "44b4322ff880c6644cb37e4bf123d778b21f33a1ac0dc9b7521a24cd67d536bd",
+      "links": []
+    },
+    "nops-kernel/components/resource-controller.md": {
+      "sha256": "353b01fd7c99d4844ef7bf9aae7f650b69d486788af470da144f82e618c7fd6f",
+      "links": []
+    },
+    "nops-kernel/components/agent-registry.md": {
+      "sha256": "bf340206a9a6aff6ef75d48b9bdd7d8bd153b4f3cab85aa832368c7543a35b35",
+      "links": []
+    },
+    "nops-kernel/components/event-bus.md": {
+      "sha256": "f22addf28ce796fdd82401440937af7e3881166b05b996496e5e09b249efb2f8",
+      "links": []
+    },
+    "nops-kernel/components/state-manager.md": {
+      "sha256": "288d8ddd81f300aabc810cb61b4b8b58f7d9ca2b18bbd271b0c6b86bb268c538",
+      "links": []
+    },
+    "nops-kernel/components/persistence.md": {
+      "sha256": "61709dbedf91ba933c2c421eafb330cb92956645a0af49b25d0b5f0d69daff55",
+      "links": []
+    },
+    "nops-kernel/components/telemetry.md": {
+      "sha256": "bfa5040e9cf3384fa35fd91dcf0465c0a5bfceab30e43dde5356f1d1106e689e",
+      "links": []
+    },
+    "nops-kernel/deployment-variants/zero-agent.md": {
+      "sha256": "1d3b69ec29d604994c759dd3b35986ebdfdfd1399d77818e7eb408083556ff0d",
+      "links": []
+    },
+    "nops-kernel/deployment-variants/shared-nops.md": {
+      "sha256": "cca680a736511b97d0991359198033d2470adf3bf6f35894adfb0f3373d6f702",
+      "links": []
+    },
+    "nops-kernel/deployment-variants/edge-lite-nops.md": {
+      "sha256": "c3aeca8cd0c2a39073d7f4611b74ac992878f3795fd6ec176a0666947f4ca2c5",
+      "links": []
+    },
+    "nops-kernel/deployment-variants/enterprise-nops.md": {
+      "sha256": "103f451a4cd86ac0b7f1e28b1e50a810cc2bfce229ccfcc7da3ff0dbbfb645a5",
+      "links": []
+    },
+    "nops-kernel/deployment-variants/air-gapped-nops.md": {
+      "sha256": "9d08edaf1be781f48984ac3a68f9713458d5431f6f564850820cabe9f74d9406",
+      "links": []
+    },
+    "nops-kernel/python-implementation/development-guide.md": {
+      "sha256": "6f7b41718f9739cb67e1ebaddb5912ed660691233ce42ff8b6ccc6a47f6fa506",
+      "links": []
+    },
+    "nops-kernel/python-implementation/async-best-practices.md": {
+      "sha256": "8aa530559393245c844c2baec295c27496d3ddf71345f6c9975d189c8e1ba722",
+      "links": []
+    },
+    "nops-kernel/python-implementation/performance-optimization.md": {
+      "sha256": "438d65b5bc7c3bf3f72e6e1c6c89f91cceda3278b5435a0fd27636b2c9688016",
+      "links": []
+    },
+    "nops-kernel/python-implementation/testing-strategy.md": {
+      "sha256": "02d19eca7118927252d2678af37a9e42e48599f2e117df404fed7b8fa68ca9ef",
+      "links": []
+    }
+  }
+}

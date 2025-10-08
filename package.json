@@ -1,0 +1,61 @@
+{
+  "name": "@andaon/agent-contracts",
+  "version": "1.0.0",
+  "description": "ENIS v3.0 Agent Contracts - Centralized API contracts, schemas, and definitions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "validate:openapi": "swagger-codegen validate -i contracts/nops-kernel-api.yaml",
+    "generate:sdks": "npm run generate:typescript && npm run generate:python && npm run generate:go",
+    "generate:typescript": "openapi-generator-cli generate -i contracts/nops-kernel-api.yaml -g typescript-axios -o sdks/typescript/nops-kernel",
+    "generate:python": "openapi-generator-cli generate -i contracts/nops-kernel-api.yaml -g python -o sdks/python/nops-kernel",
+    "generate:go": "openapi-generator-cli generate -i contracts/nops-kernel-api.yaml -g go -o sdks/go/nops-kernel"
+  },
+  "keywords": [
+    "enis",
+    "agent-contracts",
+    "api",
+    "openapi",
+    "typescript",
+    "sdk",
+    "andaon"
+  ],
+  "author": "ANDAON SA DE CV <info@andaon.com>",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ANDAON-SA-DE-CV/agent-contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ANDAON-SA-DE-CV/agent-contracts/issues"
+  },
+  "homepage": "https://github.com/ANDAON-SA-DE-CV/agent-contracts#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.1.0"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "jsonschema": "^1.4.0",
+    "yaml": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
