@@ -3,14 +3,16 @@
 ## 📋 Metadata
 
 ```yaml
-doc_version: "1.0"
+doc_version: "2.0"
 doc_type: "Mapping Documentation"
 doc_author: "@andaon"
-doc_date: "2025-10-08"
+doc_date: "2025-10-09"
+doc_updated: "2025-10-09 - Agregados 7 módulos NOPS"
 dna_version: "3.0"
 compliance: "DNA_v3_compliant"
-total_repos: 14
+total_repos: 21
 categories: ["shared", "edge", "cloud-core", "cloud-ops", "platform"]
+major_update: "cloud-core expandido de 5 a 12 repos (7 módulos NOPS agregados)"
 ```
 
 ---
@@ -27,18 +29,22 @@ Este documento mapea la **organización física de repositorios** con la **arqui
 
 ---
 
-## 📊 Vista General: 14 Repositorios
+## 📊 Vista General: 21 Repositorios
 
 ```yaml
 organizacion_repositorios:
-  total: 14
+  total: 21
   
   categorias:
-    shared: 3    # Base común para todos
-    edge: 3      # Componentes del cliente
-    cloud_core: 5  # Servicios principales
-    cloud_ops: 1   # Infraestructura y operaciones
-    platform: 2    # Marketplace y frontend
+    shared: 3       # Base común para todos
+    edge: 3         # Componentes del cliente
+    cloud_core: 12  # Servicios principales (5 macro-módulos + 7 módulos NOPS)
+    cloud_ops: 1    # Infraestructura y operaciones
+    platform: 2     # Marketplace y frontend
+    
+  desglose_cloud_core:
+    macro_modulos: 5  # ASM, CGN, AWE, SHIF, Inference
+    nops_modules: 7   # Observability, Scorecard, Billing, Sandbox, Governance, Lifecycle, Compliance
 ```
 
 ---
@@ -247,7 +253,15 @@ responsabilidades:
 
 ---
 
-## ☁️ CLOUD-CORE (5 repos) - Servicios Principales
+## ☁️ CLOUD-CORE (12 repos) - Servicios Principales
+
+### 📋 Subdivisión:
+- **5 Macro-Módulos:** ASM, CGN, AWE, SHIF, Inference
+- **7 Módulos NOPS:** Observability, Scorecard, Billing, Sandbox, Resource Governance, Lifecycle, Compliance
+
+---
+
+### 🎯 MACRO-MÓDULOS (5 repos)
 
 ### 7. **asm-service**
 
@@ -380,9 +394,244 @@ responsabilidades:
 
 ---
 
+### 🟣 MÓDULOS NOPS (7 repos) - Extraídos del NOPS Kernel
+
+Estos servicios fueron **extraídos del NOPS Kernel** según el **Principio SLIM** para mantener el kernel ligero (< 100MB RAM).
+
+### 12. **observability-service**
+
+```yaml
+repositorio: "cloud-core/observability-service"
+proposito: "Full-stack observability (metrics, logs, traces)"
+tecnologias: ["Prometheus", "Grafana", "Jaeger", "ELK", "Vector"]
+dependencias: ["enis-infrastructure"]
+dependientes: ["TODOS los servicios"]
+
+componente_logico: "Observability Module"
+ubicacion_arquitectura: "Monitoring & Observability Layer"
+
+archivos_clave:
+  - "37-observability-master-prompt.md" ⭐ (~1,500 líneas)
+  - "22-monitoring-master-prompt.md"
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+  - "19-performance-master-prompt.md"
+
+responsabilidades:
+  - "Metrics collection (Prometheus)"
+  - "Distributed tracing (Jaeger + OpenTelemetry)"
+  - "Log aggregation (ELK + Vector)"
+  - "Dashboards (Grafana)"
+  - "Alerting (Alertmanager + PagerDuty)"
+
+nops_kernel_integration:
+  client: "ObservabilityAPIClient"
+  communication: "mTLS + JWT s2s"
+  degraded_mode: "Local Prometheus endpoint + stdout logs"
+
+sprint: "S22-P1"
+priority: "P1"
+```
+
+### 13. **scorecard-service**
+
+```yaml
+repositorio: "cloud-core/scorecard-service"
+proposito: "Agent scoring, analytics y ML benchmarks"
+tecnologias: ["Python", "scikit-learn", "Redis", "TimescaleDB"]
+dependencias: ["observability-service"]
+dependientes: ["agent-marketplace"]
+
+componente_logico: "Scorecard Module"
+ubicacion_arquitectura: "Analytics & Quality Layer"
+
+archivos_clave:
+  - "38-scorecard-master-prompt.md" ⭐ (~1,200 líneas)
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+
+responsabilidades:
+  - "Multi-dimensional scoring (accuracy, latency, cost, reliability, security)"
+  - "ML quality predictor (Gradient Boosting, 85%+ accuracy)"
+  - "Leaderboards públicos (Redis sorted sets)"
+  - "Agent certification (Bronze/Silver/Gold/Platinum)"
+
+nops_kernel_integration:
+  client: "ScorecardAPIClient"
+  communication: "mTLS + JWT s2s"
+  degraded_mode: "Routing sin scores (round-robin)"
+
+sprint: "S23-P1"
+priority: "P2"
+```
+
+### 14. **billing-service**
+
+```yaml
+repositorio: "cloud-core/billing-service"
+proposito: "Usage metering, payment processing y invoicing"
+tecnologias: ["Python", "Redis Streams", "Stripe", "PayPal", "WeasyPrint"]
+dependencias: ["enis-infrastructure"]
+dependientes: ["agent-marketplace", "enis-frontend"]
+
+componente_logico: "Billing Module"
+ubicacion_arquitectura: "Revenue & Billing Layer"
+
+archivos_clave:
+  - "39-billing-master-prompt.md" ⭐ (~1,300 líneas)
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+
+responsabilidades:
+  - "Usage metering en tiempo real (Redis Streams)"
+  - "Payment processing (Stripe, PayPal, Wire Transfer)"
+  - "Invoice generation (PDF con WeasyPrint)"
+  - "PCI-DSS Level 1 compliance"
+
+nops_kernel_integration:
+  client: "BillingAPIClient"
+  communication: "mTLS + JWT s2s + batching"
+  degraded_mode: "Funciona sin billing (recupera después)"
+
+sprint: "S22-P3"
+priority: "P1 - REVENUE CRITICAL"
+```
+
+### 15. **sandbox-service**
+
+```yaml
+repositorio: "cloud-core/sandbox-service"
+proposito: "Entorno aislado para testing de Edge Agents"
+tecnologias: ["gVisor", "Firecracker", "Kubernetes", "eBPF", "Falco"]
+dependencias: ["enis-infrastructure"]
+dependientes: ["edge-agents", "agent-marketplace"]
+
+componente_logico: "Sandbox Module"
+ubicacion_arquitectura: "Security & Testing Layer"
+
+archivos_clave:
+  - "40-sandbox-master-prompt.md" ⭐ (~1,100 líneas)
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+
+responsabilidades:
+  - "gVisor + Kubernetes isolation"
+  - "Resource limits (cgroups v2 + eBPF)"
+  - "Security monitoring (Falco)"
+  - "Automated testing framework"
+
+nops_kernel_integration:
+  client: "SandboxAPIClient"
+  communication: "mTLS + JWT s2s"
+  degraded_mode: "Testing deshabilitado"
+
+sprint: "S23-P2"
+priority: "P3"
+```
+
+### 16. **resource-governance-service**
+
+```yaml
+repositorio: "cloud-core/resource-governance-service"
+proposito: "Fairness algorithms, cost optimization, forecasting"
+tecnologias: ["Python", "scikit-learn", "Prophet", "scipy", "OR-Tools"]
+dependencias: ["billing-service", "observability-service"]
+dependientes: ["nops-kernel"]
+
+componente_logico: "Resource Governance Module"
+ubicacion_arquitectura: "Resource Management Layer"
+
+archivos_clave:
+  - "43-resource-governance-master-prompt.md" ⭐ (~1,400 líneas)
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+
+responsabilidades:
+  - "ML-based fairness (Weighted Fair Queueing, Max-Min)"
+  - "Noisy neighbor detection (Isolation Forest)"
+  - "Cost optimization (Linear Programming)"
+  - "Resource forecasting (Prophet + LSTM)"
+  - "Multi-tenant resource optimization"
+
+nops_kernel_integration:
+  client: "❌ No requiere (básico en Policy Engine)"
+  communication: "Extiende Policy Engine del kernel"
+  degraded_mode: "Kernel usa quotas estáticas"
+
+sprint: "S23-S24 (Q2 2025)"
+priority: "P2"
+```
+
+### 17. **lifecycle-service**
+
+```yaml
+repositorio: "cloud-core/lifecycle-service"
+proposito: "Deployment strategies, rollbacks, version management"
+tecnologias: ["Go", "Kubernetes Operator", "Helm", "Flagger"]
+dependencias: ["enis-infrastructure"]
+dependientes: ["edge-agents", "nops-kernel"]
+
+componente_logico: "Lifecycle Module"
+ubicacion_arquitectura: "Deployment & Release Layer"
+
+archivos_clave:
+  - "42-lifecycle-master-prompt.md" ⭐ (~1,200 líneas)
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+
+responsabilidades:
+  - "Deployment strategies (Rolling, Blue-Green, Canary, Recreate)"
+  - "Kubernetes Operator implementation"
+  - "Automated rollback mechanisms"
+  - "Version compatibility matrix"
+  - "Health & readiness monitoring"
+
+nops_kernel_integration:
+  client: "❌ No requiere (operado por CI/CD)"
+  communication: "K8s Operator pattern"
+  
+sprint: "S23-P2"
+priority: "P3"
+```
+
+### 18. **compliance-service**
+
+```yaml
+repositorio: "cloud-core/compliance-service"
+proposito: "Audit trail inmutable, SEC validation, regulatory compliance"
+tecnologias: ["Python", "PostgreSQL", "S3 WORM", "AWS KMS", "Cosign"]
+dependencias: ["enis-infrastructure"]
+dependientes: ["TODOS los servicios (audit obligatorio)"]
+
+componente_logico: "Compliance Module"
+ubicacion_arquitectura: "Compliance & Audit Layer"
+
+archivos_clave:
+  - "41-compliance-master-prompt.md" ⭐ (~1,200 líneas)
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+
+responsabilidades:
+  - "SEC (Signed Execution Contract) - S13.5 blocker"
+  - "Audit trail inmutable (append-only + hash chain)"
+  - "Regulatory compliance (SOC2, GDPR, HIPAA, ISO27001)"
+  - "Forensics toolkit"
+  - "SBOM validation (CycloneDX, SPDX)"
+
+nops_kernel_integration:
+  client: "ComplianceAPIClient"
+  communication: "mTLS + JWT s2s + local fallback"
+  degraded_mode: "Local audit.jsonl persistence"
+
+sprint: "S22-P4"
+priority: "P1 - CRÍTICO (blocker para S14 Pre-GA)"
+```
+
+---
+
 ## 🔧 CLOUD-OPS (1 repo) - Infraestructura
 
-### 12. **cloud-infrastructure**
+### 19. **cloud-infrastructure**
 
 ```yaml
 repositorio: "cloud-ops/cloud-infrastructure"
@@ -416,7 +665,7 @@ responsabilidades:
 
 ## 🛒 PLATFORM (2 repos) - Marketplace y Frontend
 
-### 13. **agent-marketplace**
+### 20. **agent-marketplace**
 
 ```yaml
 repositorio: "platform/agent-marketplace"
@@ -450,7 +699,7 @@ responsabilidades:
   - "Agent discovery"
 ```
 
-### 14. **enis-frontend**
+### 21. **enis-frontend**
 
 ```yaml
 repositorio: "platform/enis-frontend"
@@ -485,22 +734,29 @@ responsabilidades:
 
 ## 🗺️ Matriz de Dependencias
 
-| Repo | Depende de | Es dependencia de | Master Prompts |
-|------|------------|-------------------|----------------|
-| **agent-contracts** | - | TODOS | 02, 18, 20 |
-| **agent-sdks** | contracts | edge-agents, frontend, marketplace | 04, 09, 20, 21 |
-| **enis-infrastructure** | - | cloud-infrastructure, edge-infrastructure | 02, 18, 19, 22, 24 |
-| **nops-kernel** | contracts, sdks | edge-agents | **07**, 11, 02, 06, 10, 18, 19, 22 |
-| **edge-agents** | nops-kernel, contracts, sdks | - | **10**, 04, 18, 19, 21 |
-| **edge-infrastructure** | enis-infrastructure | nops, edge-agents | 02, 10, 18, 19, 22, 24 |
-| **asm-service** | contracts | inference | **13**, 02, 18, 19 |
-| **cgn-service** | contracts | inference | **14**, 02, 18, 19 |
-| **awe-service** | contracts, asm | inference | **15**, 02, 18, 19 |
-| **shif-service** | contracts | inference | **16**, 02, 18, 19 |
-| **inference-service** | contracts, ASM, CGN, AWE, SHIF | - | **12**, 02, 18, 19, 22 |
-| **cloud-infrastructure** | enis-infrastructure | cloud-core services | 02, 18, 19, 22, 24, 25 |
-| **agent-marketplace** | contracts, sdks | frontend | **08**, 03, 18, 25 |
-| **enis-frontend** | sdks, marketplace | - | **17**, 05, 23, 26, 27, 28, 29 |
+| # | Repo | Depende de | Es dependencia de | Master Prompts Principales |
+|---|------|------------|-------------------|---------------------------|
+| 1 | **agent-contracts** | - | TODOS | 02, 18, 20, **30** |
+| 2 | **agent-sdks** | contracts | edge-agents, frontend, marketplace | 04, 09, 20, 21, **31** |
+| 3 | **enis-infrastructure** | - | cloud-infra, edge-infra | 02, 18, 19, 22, 24, **32** |
+| 4 | **nops-kernel** | contracts, sdks | edge-agents | **07**, 11, 02, 06, 10, 18, 19, 22 |
+| 5 | **edge-agents** | nops-kernel, contracts, sdks | - | **10**, 04, 18, 19, 21 |
+| 6 | **edge-infrastructure** | enis-infrastructure | nops, edge-agents | 02, 10, 18, 19, 22, 24, **34** |
+| 7 | **asm-service** | contracts | inference | **13**, 02, 18, 19 |
+| 8 | **cgn-service** | contracts | inference | **14**, 02, 18, 19 |
+| 9 | **awe-service** | contracts, asm | inference | **15**, 02, 18, 19 |
+| 10 | **shif-service** | contracts | inference | **16**, 02, 18, 19 |
+| 11 | **inference-service** | contracts, ASM, CGN, AWE, SHIF | - | **12**, 02, 18, 19, 22, **30** |
+| 12 | **observability-service** 🆕 | enis-infrastructure | TODOS | **37**, 02, 18, 19, 22 |
+| 13 | **scorecard-service** 🆕 | observability | marketplace | **38**, 02, 18, 19 |
+| 14 | **billing-service** 🆕 | enis-infrastructure | marketplace, frontend | **39**, 02, 18, 19 |
+| 15 | **sandbox-service** 🆕 | enis-infrastructure | edge-agents, marketplace | **40**, 02, 18 |
+| 16 | **resource-governance** 🆕 | billing, observability | nops-kernel | **43**, 02, 18, 19 |
+| 17 | **lifecycle-service** 🆕 | enis-infrastructure | edge-agents, nops | **42**, 02, 18 |
+| 18 | **compliance-service** 🆕 | enis-infrastructure | TODOS (audit) | **41**, 02, 18 |
+| 19 | **cloud-infrastructure** | enis-infrastructure | cloud-core services | 02, 18, 19, 22, 24, 25, **33** |
+| 20 | **agent-marketplace** | contracts, sdks | frontend | **08**, 03, 18, 25, **35** |
+| 21 | **enis-frontend** | sdks, marketplace | - | **17**, 05, 23, 26, 27, 28, 29, **36** |
 
 ---
 
@@ -509,22 +765,40 @@ responsabilidades:
 ```yaml
 roadmaps_existentes:
   con_roadmap:
-    - "nops-kernel/ROADMAP_SPRINTS_NOPS_KERNEL.md" ✅
+    - "nops-kernel/ROADMAP_SPRINTS_NOPS_KERNEL.md" ✅ (S1-S22, incluye S13.5 SEC)
     - "inference-service/ROADMAP_INFERENCE_SERVICE.md" ✅
     - "agent-contracts/agent_contracts_roadmap_2025_2026_detallado.md" ✅
   
-  sin_roadmap:
+  sin_roadmap_usar_master_prompts:
+    # Edge
     - "edge-agents/" ⏳ (Usar 10-edge-master-prompt.md)
+    - "edge-infrastructure/" ⏳ (Usar 34-edge-infrastructure-master-prompt.md)
+    
+    # Cloud-Core: Macro-Módulos
     - "asm-service/" ⏳ (Usar 13-asm-master-prompt.md)
     - "cgn-service/" ⏳ (Usar 14-cgn-master-prompt.md)
     - "awe-service/" ⏳ (Usar 15-awe-master-prompt.md)
     - "shif-service/" ⏳ (Usar 16-shif-master-prompt.md)
-    - "agent-marketplace/" ⏳ (Usar 08-marketplace-master-prompt.md)
-    - "enis-frontend/" ⏳ (Usar 17-uiux-dashboard-master-prompt.md)
-    - "cloud-infrastructure/" ⏳
-    - "edge-infrastructure/" ⏳
-    - "agent-sdks/" ⏳
-    - "enis-infrastructure/" ⏳
+    
+    # Cloud-Core: 7 Módulos NOPS 🆕
+    - "observability-service/" ⏳ (Usar 37-observability-master-prompt.md)
+    - "scorecard-service/" ⏳ (Usar 38-scorecard-master-prompt.md)
+    - "billing-service/" ⏳ (Usar 39-billing-master-prompt.md)
+    - "sandbox-service/" ⏳ (Usar 40-sandbox-master-prompt.md)
+    - "compliance-service/" ⏳ (Usar 41-compliance-master-prompt.md)
+    - "lifecycle-service/" ⏳ (Usar 42-lifecycle-master-prompt.md)
+    - "resource-governance-service/" ⏳ (Usar 43-resource-governance-master-prompt.md)
+    
+    # Platform
+    - "agent-marketplace/" ⏳ (Usar 08-marketplace-master-prompt.md + 35)
+    - "enis-frontend/" ⏳ (Usar 17-uiux-dashboard-master-prompt.md + 36)
+    
+    # Shared
+    - "agent-sdks/" ⏳ (Usar 31-agent-sdks-master-prompt.md)
+    - "enis-infrastructure/" ⏳ (Usar 32-enis-infrastructure-master-prompt.md)
+    
+    # Cloud-Ops
+    - "cloud-infrastructure/" ⏳ (Usar 33-cloud-infrastructure-master-prompt.md)
 ```
 
 ---
@@ -673,30 +947,45 @@ sprints_multi_repo:
 
 ```yaml
 resumen_ejecutivo:
-  total_repositorios: 14
+  total_repositorios: 21  # Actualizado 2025-10-09
   
   distribucion:
-    shared: "21% (3/14) - Base común"
-    edge: "21% (3/14) - Cliente/Edge"
-    cloud_core: "36% (5/14) - Servicios principales"
-    cloud_ops: "7% (1/14) - Infraestructura"
-    platform: "14% (2/14) - Marketplace y UI"
+    shared: "14% (3/21) - Base común"
+    edge: "14% (3/21) - Cliente/Edge"
+    cloud_core: "57% (12/21) - Servicios principales (5 macro + 7 NOPS)"
+    cloud_ops: "5% (1/21) - Infraestructura"
+    platform: "10% (2/21) - Marketplace y UI"
+  
+  cloud_core_detalle:
+    macro_modulos: "5 repos (ASM, CGN, AWE, SHIF, Inference)"
+    nops_modules: "7 repos (Obs, Score, Bill, Sandbox, Governance, Lifecycle, Compliance)"
   
   roadmaps_con_sprints:
-    - "nops-kernel (S1-S21, 21 sprints)"
-    - "inference-service (tiene roadmap)"
+    - "nops-kernel (S1-S22, incluye S13.5 SEC)"
+    - "inference-service (roadmap completo)"
     - "agent-contracts (roadmap 2025-2026)"
   
+  master_prompts_nuevos:
+    rango: "37-43 (7 módulos NOPS)"
+    total_lineas: "~9,000 líneas profesionales"
+    estado: "TODOS completados ✅"
+    
   master_prompts_mas_usados:
-    1: "18-security-master-prompt.md (14/14 repos = 100%)"
-    2: "02-architecture-master-prompt.md (11/14 repos = 79%)"
-    3: "19-performance-master-prompt.md (10/14 repos = 71%)"
+    1: "18-security-master-prompt.md (21/21 repos = 100%)"
+    2: "02-architecture-master-prompt.md (19/21 repos = 90%)"
+    3: "19-performance-master-prompt.md (16/21 repos = 76%)"
   
-  recomendacion_roadmap_nops:
-    estrategia: "Usar TODOS los master prompts relacionados"
-    justificacion: "NOPS Kernel es orquestador central que integra TODOS los componentes"
-    master_prompts_minimos: ["02", "06", "07", "10", "11", "18", "19", "22"]
-    resultado: "Roadmap completo e integrado con dependencias claras"
+  nops_kernel_api_clients:
+    implementados: 5
+    clientes:
+      - "ObservabilityAPIClient (37)"
+      - "ScorecardAPIClient (38)"
+      - "BillingAPIClient (39)"
+      - "SandboxAPIClient (40)"
+      - "ComplianceAPIClient (41)"
+    no_requieren_client:
+      - "ResourceGovernance (43 - básico en Policy Engine)"
+      - "Lifecycle (42 - K8s Operator)"
 ```
 
 ---
@@ -711,6 +1000,8 @@ resumen_ejecutivo:
 ---
 
 **Generado:** 2025-10-08  
+**Actualizado:** 2025-10-09 (Agregados 7 módulos NOPS)  
 **Autor:** @andaon  
-**Compliance:** DNA v3.0 ✅
+**Compliance:** DNA v3.0 ✅  
+**Versión:** 2.0 (21 repositorios)
 

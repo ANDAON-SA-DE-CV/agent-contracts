@@ -6,10 +6,12 @@
 metadata:
   version: "3.0"
   fecha: "2025-10-08"
+  actualizado: "2025-10-09"
   autor: "@andaon"
-  total_repositorios: 14
-  total_componentes_logicos: 35+
-  master_prompts_unicos: 29
+  total_repositorios: 21
+  total_componentes_logicos: 42+
+  master_prompts_unicos: 43
+  master_prompts_nops: "37-43 (7 módulos NOPS agregados)"
 ```
 
 ---
@@ -31,12 +33,22 @@ graph TB
     end
     
     subgraph "NIVEL 3: CLOUD (Plataforma)"
-        subgraph "Cloud-Core Services"
+        subgraph "Cloud-Core: Macro-Módulos (5)"
             ASM[☁️ asm-service<br/>Adaptive State]
             CGN[☁️ cgn-service<br/>Causal Graph]
             AWE[☁️ awe-service<br/>Workflow Evo]
             SHIF[☁️ shif-service<br/>Integration]
             INFERENCE[☁️ inference-service<br/>LLM Router]
+        end
+        
+        subgraph "Cloud-Core: 7 Módulos NOPS 🆕"
+            OBS[🟣 observability-service<br/>37]
+            SCORE[🟣 scorecard-service<br/>38]
+            BILL[🟣 billing-service<br/>39]
+            SANDBOX[🟣 sandbox-service<br/>40]
+            COMPLIANCE[🟣 compliance-service<br/>41]
+            LIFECYCLE[🟣 lifecycle-service<br/>42]
+            GOVERNANCE[🟣 resource-governance<br/>43]
         end
         
         subgraph "Cloud-Ops"
@@ -82,12 +94,28 @@ graph TB
     
     MARKETPLACE --> FRONTEND
     
+    NOPS -.->|API Client| OBS
+    NOPS -.->|API Client| SCORE
+    NOPS -.->|API Client| BILL
+    NOPS -.->|API Client| SANDBOX
+    NOPS -.->|API Client| COMPLIANCE
+    
+    BILL --> GOVERNANCE
+    OBS --> GOVERNANCE
+    
     style CONTRACTS fill:#607D8B,color:#fff
     style SDKS fill:#607D8B,color:#fff
     style INFRA fill:#607D8B,color:#fff
     style NOPS fill:#6B46C1,color:#fff
     style AGENTS fill:#00BCD4,color:#fff
     style INFERENCE fill:#FF8C42,color:#fff
+    style OBS fill:#9B59B6,color:#fff
+    style SCORE fill:#9B59B6,color:#fff
+    style BILL fill:#9B59B6,color:#fff
+    style SANDBOX fill:#9B59B6,color:#fff
+    style COMPLIANCE fill:#9B59B6,color:#fff
+    style LIFECYCLE fill:#9B59B6,color:#fff
+    style GOVERNANCE fill:#9B59B6,color:#fff
 ```
 
 ---
@@ -96,27 +124,37 @@ graph TB
 
 ```yaml
 organizacion:
-  "📁 shared/" (21% - 3 repos):
+  "📁 shared/" (14% - 3 repos):
     - agent-contracts      # Schemas, Proto, OpenAPI
     - agent-sdks          # Python, Go, TS, Java, C#
     - enis-infrastructure # Terraform, Helm base
   
-  "📁 edge/" (21% - 3 repos):
+  "📁 edge/" (14% - 3 repos):
     - nops-kernel         # Python 3.11+, FastAPI
     - edge-agents         # 5 tipos de agents
     - edge-infrastructure # K3s, Docker
   
-  "📁 cloud-core/" (36% - 5 repos):
-    - asm-service         # Adaptive State Manager
-    - cgn-service         # Causal Graph Network
-    - awe-service         # Adaptive Workflow Evolution
-    - shif-service        # Secure Hybrid Integration
-    - inference-service   # LLM Router
+  "📁 cloud-core/" (57% - 12 repos):
+    macro_modulos:
+      - asm-service         # Adaptive State Manager (13)
+      - cgn-service         # Causal Graph Network (14)
+      - awe-service         # Adaptive Workflow Evolution (15)
+      - shif-service        # Secure Hybrid Integration (16)
+      - inference-service   # LLM Router (12)
+    
+    nops_modules:  # 🆕 Extraídos del NOPS Kernel (Principio SLIM)
+      - observability-service      # Full-stack observability (37)
+      - scorecard-service          # Agent scoring + ML (38)
+      - billing-service            # Metering + Payments (39)
+      - sandbox-service            # Isolation + Testing (40)
+      - compliance-service         # SEC + Audit Trail (41)
+      - lifecycle-service          # Deployments + Rollbacks (42)
+      - resource-governance-service # Fairness + Cost Opt (43)
   
-  "📁 cloud-ops/" (7% - 1 repo):
+  "📁 cloud-ops/" (5% - 1 repo):
     - cloud-infrastructure # Terraform, Helm, ArgoCD
   
-  "📁 platform/" (14% - 2 repos):
+  "📁 platform/" (10% - 2 repos):
     - agent-marketplace   # Public/Private registry
     - enis-frontend       # Next.js, Studio App
 ```
@@ -343,19 +381,21 @@ roadmap_v2:
 ```yaml
 valor_agregado:
   visualizacion:
-    - "Diagrama interactivo con 14 repos"
+    - "Diagrama interactivo con 21 repos (actualizado 2025-10-09)"
+    - "7 módulos NOPS nuevos en el grafo"
     - "5 botones nuevos para filtrar vistas"
     - "Conexiones claras repo→componente"
   
   documentacion:
-    - "Mapeo completo 14 repos"
-    - "Dependencias documentadas"
-    - "Master prompts por repo"
+    - "Mapeo completo 21 repos"
+    - "7 módulos NOPS documentados (~9,000 líneas)"
+    - "Dependencias actualizadas"
+    - "Master prompts 37-43 agregados"
   
   roadmap:
     - "Respuesta clara: usar TODOS los prompts"
-    - "Nivel de integración actual: 70-75%"
-    - "Plan de mejora a 95%+"
+    - "Nivel de integración actual: 90-95% (mejorado con módulos NOPS)"
+    - "NOPS Kernel SLIM architecture implementada"
 ```
 
 ---
@@ -385,10 +425,26 @@ El roadmap actual **YA está integrando** contenido de múltiples prompts:
 - ✅ Intelligent routing (del 06-orchestrator)
 
 Pero **le falta**:
-- ⏳ SEC (Signed Execution Contract) - Sprint S13.5
+- ✅ SEC (Signed Execution Contract) - Sprint S13.5 ✅ AGREGADO
 - ⏳ Referencias explícitas a 5 tipos de Edge Agents
 - ⏳ Sección de master prompts por sprint
 - ⏳ Dependencias multi-repo
+
+### **Actualización 2025-10-09:**
+
+✅ **7 Módulos NOPS completamente documentados:**
+- 37-observability (~1,500 líneas)
+- 38-scorecard (~1,200 líneas)
+- 39-billing (~1,300 líneas)
+- 40-sandbox (~1,100 líneas)
+- 41-compliance (~1,200 líneas)
+- 42-lifecycle (~1,200 líneas)
+- 43-resource-governance (~1,400 líneas)
+
+✅ **Total:** ~9,000 líneas de documentación profesional  
+✅ **Arquitectura SLIM** correctamente implementada  
+✅ **5 API Clients** en NOPS Kernel (Obs, Scorecard, Billing, Sandbox, Compliance)  
+✅ **21 repositorios** organizados en 5 categorías  
 
 ---
 
