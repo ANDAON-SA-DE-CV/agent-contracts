@@ -646,28 +646,195 @@ class ComplianceAPIClient:
 
 ---
 
-#### 4. Servicios Externos sin API Client (Opcionales)
-
-Los siguientes servicios NO requieren clients en el kernel (funcionalidad post-GA):
+#### 4. Scorecard API Client (Opcional) ✅
 
 ```python
-# Estos servicios se comunican por otros medios (no API directa desde kernel)
+# nops_kernel/clients/scorecard_client.py
+import httpx
+from typing import Dict, Any, Optional
+import structlog
 
+class ScorecardAPIClient:
+    """
+    Cliente API ligero para scorecard-service (cloud-core)
+    
+    Responsabilidades del CLIENTE (en kernel):
+    - Enviar performance metrics para scoring
+    - Query de agent scores para routing decisions
+    - Degraded mode si servicio no disponible
+    
+    Responsabilidades del SERVICIO (cloud-core/scorecard-service):
+    - Multi-dimensional scoring (accuracy, latency, cost, reliability, security)
+    - ML quality prediction
+    - Leaderboards públicos
+    - Agent certification
+    """
+    
+    def __init__(
+        self,
+        service_url: str,
+        mtls_cert: str,
+        mtls_key: str,
+        timeout: int = 5
+    ):
+        self.client = httpx.AsyncClient(
+            base_url=service_url,
+            cert=(mtls_cert, mtls_key),
+            verify=True,
+            timeout=timeout
+        )
+        self.logger = structlog.get_logger().bind(module="scorecard_client")
+        
+    async def get_agent_score(
+        self,
+        agent_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Obtiene score actual de un agent"""
+        try:
+            response = await self.client.get(
+                f"/api/v1/agents/{agent_id}/score"
+            )
+            response.raise_for_status()
+            return response.json()
+        except (httpx.HTTPError, httpx.TimeoutException) as e:
+            self.logger.warning("scorecard_api_failed", error=str(e))
+            return None  # Degraded mode - routing sin scores
+    
+    async def record_execution_metrics(
+        self,
+        agent_id: str,
+        execution_metrics: Dict[str, Any]
+    ):
+        """Envía métricas de ejecución para scoring"""
+        try:
+            await self.client.post(
+                "/api/v1/executions/metrics",
+                json={
+                    "agent_id": agent_id,
+                    "metrics": execution_metrics,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+        except (httpx.HTTPError, httpx.TimeoutException):
+            pass  # Fire-and-forget - no bloquea ejecución
+```
+
+---
+
+#### 5. Sandbox API Client (Opcional) ✅
+
+```python
+# nops_kernel/clients/sandbox_client.py
+import httpx
+from typing import Dict, Any, Optional
+import structlog
+
+class SandboxAPIClient:
+    """
+    Cliente API ligero para sandbox-service (cloud-core)
+    
+    Responsabilidades del CLIENTE (en kernel):
+    - Solicitar sandbox para testing de agents
+    - Ejecutar code en entorno aislado
+    - Cleanup de sandboxes
+    
+    Responsabilidades del SERVICIO (cloud-core/sandbox-service):
+    - gVisor/Firecracker isolation
+    - Resource limits enforcement
+    - Security monitoring (Falco)
+    - Automated testing framework
+    """
+    
+    def __init__(
+        self,
+        service_url: str,
+        mtls_cert: str,
+        mtls_key: str,
+        timeout: int = 30  # Mayor timeout - workloads pueden ser lentos
+    ):
+        self.client = httpx.AsyncClient(
+            base_url=service_url,
+            cert=(mtls_cert, mtls_key),
+            verify=True,
+            timeout=timeout
+        )
+        self.logger = structlog.get_logger().bind(module="sandbox_client")
+        
+    async def create_sandbox(
+        self,
+        agent_id: str,
+        isolation_level: str = "standard"  # standard | high
+    ) -> Optional[str]:
+        """
+        Crea sandbox aislado para testing
+        
+        Returns:
+            sandbox_id o None si falla
+        """
+        try:
+            response = await self.client.post(
+                "/api/v1/sandbox/create",
+                json={
+                    "agent_id": agent_id,
+                    "isolation_level": isolation_level,
+                    "resource_limits": {
+                        "cpu": "2000m",
+                        "memory": "512Mi",
+                        "timeout_seconds": 300
+                    }
+                }
+            )
+            response.raise_for_status()
+            
+            result = response.json()
+            return result.get("sandbox_id")
+            
+        except (httpx.HTTPError, httpx.TimeoutException) as e:
+            self.logger.error("sandbox_creation_failed", error=str(e))
+            return None
+    
+    async def execute_in_sandbox(
+        self,
+        sandbox_id: str,
+        code: str,
+        input_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Ejecuta código en sandbox aislado"""
+        try:
+            response = await self.client.post(
+                f"/api/v1/sandbox/{sandbox_id}/execute",
+                json={
+                    "code": code,
+                    "input": input_data,
+                    "timeout_seconds": 300
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except (httpx.HTTPError, httpx.TimeoutException) as e:
+            self.logger.error("sandbox_execution_failed", error=str(e))
+            return None
+    
+    async def destroy_sandbox(self, sandbox_id: str):
+        """Destruye sandbox (cleanup)"""
+        try:
+            await self.client.delete(f"/api/v1/sandbox/{sandbox_id}")
+        except (httpx.HTTPError, httpx.TimeoutException):
+            pass  # Best effort cleanup
+```
+
+---
+
+#### 6. Lifecycle Service (Operado por CI/CD - Sin Client)
+
+```python
 """
-scorecard-service (cloud-core):
-  - Consume métricas de observability-service
-  - NO requiere client directo en kernel
-  - NOPS envía métricas a observability, scorecard las analiza
-  
-sandbox-service (cloud-core):
-  - Runtime de ejecución aislada
-  - Usado por edge-agents, NO por kernel directamente
-  - Comunicación: edge-agent → sandbox-service API
-  
 lifecycle-service (cloud-core):
-  - Orquestación de deployments
-  - Operado por DevOps/CI/CD, NO por kernel
+  - Orquestación de deployments (Rolling, Blue-Green, Canary)
+  - Operado por DevOps/CI/CD, NO por kernel directamente
   - Comunicación: CI/CD pipeline → lifecycle-service API
+  - Kubernetes Operator pattern
 """
 ```
 
@@ -677,22 +844,30 @@ lifecycle-service (cloud-core):
 
 ```yaml
 api_clients_en_kernel:
-  incluidos:
+  incluidos_produccion:  # ✅ 5 clientes implementados
     - ObservabilityAPIClient (básico + degraded mode)
+    - ScorecardAPIClient (agent scoring + routing decisions)
     - BillingAPIClient (usage tracking + queue)
+    - SandboxAPIClient (isolated testing)
     - ComplianceAPIClient (audit trail + local persistence)
   
   NO_incluidos:
-    - ScorecardAPIClient (scorecard lee de observability)
-    - SandboxAPIClient (usado por edge-agents, no kernel)
-    - LifecycleAPIClient (usado por CI/CD, no kernel)
+    - LifecycleAPIClient (operado por K8s Operator/CI/CD, no requiere client)
+    - ResourceGovernanceAPIClient (funcionalidad básica en Policy Engine del kernel)
   
   caracteristicas_clients:
     tamaño: "< 200 líneas por client"
     dependencias: "httpx, structlog (ligeras)"
     degraded_mode: "Todos soportan operación offline"
-    timeout: "Agresivos (5-10s)"
+    timeout: "5-30s (según tipo de workload)"
     comunicacion: "mTLS + JWT s2s"
+    
+  configuracion_env:
+    - "OBSERVABILITY_BASE_URL"
+    - "SCORECARD_BASE_URL"
+    - "BILLING_BASE_URL"
+    - "SANDBOX_BASE_URL"
+    - "COMPLIANCE_BASE_URL"
 ```
 
 ## 🔧 Integración Completa del Kernel
@@ -713,15 +888,32 @@ logger = structlog.get_logger()
 @dataclass
 class NOPSConfig:
     """Configuración principal del NOPS Kernel"""
+    # Core settings
     max_agents: int = 1000
     max_resources_per_agent: int = 10
     health_check_interval: int = 30
+    
+    # External services URLs (cloud-core)
+    observability_service_url: Optional[str] = "http://observability-service:8080"
+    scorecard_service_url: Optional[str] = "http://scorecard-service:8080"
+    billing_service_url: Optional[str] = "http://billing-service:8080"
+    sandbox_service_url: Optional[str] = "http://sandbox-service:8080"
+    compliance_service_url: Optional[str] = "http://compliance-service:8080"
+    
+    # mTLS certificates
+    mtls_cert: Optional[str] = "/etc/nops/certs/client.crt"
+    mtls_key: Optional[str] = "/etc/nops/certs/client.key"
+    
+    # Local fallback paths
+    local_audit_file: str = "/var/log/nops/audit.jsonl"
+    
+    # Feature flags (deprecated - servicios ya en producción)
     enable_persistence: bool = True
     enable_billing: bool = True
-    enable_sandbox: bool = False  # Q2 2025
-    enable_governance: bool = False  # Q2 2025
-    enable_lifecycle: bool = False  # Q3 2025
-    enable_compliance: bool = False  # Q3 2025
+    enable_sandbox: bool = True  # ✅ Producción
+    enable_governance: bool = False  # Pendiente Q2 2025
+    enable_lifecycle: bool = False  # K8s Operator (no client)
+    enable_compliance: bool = True  # ✅ Producción
 
 class NOPSKernel:
     """
@@ -783,12 +975,31 @@ class NOPSKernel:
             local_audit_file=self.config.local_audit_file
         )
         
-        # Scorecard, Sandbox, Lifecycle NO requieren clients directos
-        # (se comunican indirectamente o son operados por otros sistemas)
+        # Scorecard client (opcional - analytics pasivos)
+        if self.config.scorecard_service_url:
+            self.scorecard_client = ScorecardAPIClient(
+                service_url=self.config.scorecard_service_url,
+                mtls_cert=self.config.mtls_cert,
+                mtls_key=self.config.mtls_key
+            )
+        else:
+            self.scorecard_client = None  # Degraded mode - no scoring
+        
+        # Sandbox client (opcional - usado por edge-agents para testing)
+        if self.config.sandbox_service_url:
+            self.sandbox_client = SandboxAPIClient(
+                service_url=self.config.sandbox_service_url,
+                mtls_cert=self.config.mtls_cert,
+                mtls_key=self.config.mtls_key
+            )
+        else:
+            self.sandbox_client = None  # Degraded mode - no sandbox
+        
+        # Lifecycle NO requiere client directo (operado por K8s Operator/CI/CD)
     
     async def start(self):
         """Inicia el NOPS Kernel (SLIM)"""
-        self.logger.info("Starting NOPS Kernel SLIM", version="3.1", external_clients=3)
+        self.logger.info("Starting NOPS Kernel SLIM", version="3.1", external_clients=5)
         
         try:
             # Inicializar componentes core
@@ -908,14 +1119,14 @@ graph TB
         F[Event Bus]
     end
     
-    subgraph "Infrastructure Modules"
-        G[1. Observability ✅]
-        H[2. Scorecard ✅]
-        I[3. Billing ✅]
-        J[4. Sandbox 🚧]
-        K[5. Governance 🚧]
-        L[6. Lifecycle 📅]
-        M[7. Compliance 📅]
+    subgraph "7 Módulos NOPS (cloud-core)"
+        G[1. Observability ✅ PROD]
+        H[2. Scorecard ✅ PROD]
+        I[3. Billing ✅ PROD]
+        J[4. Sandbox ✅ PROD]
+        K[5. Governance 🚧 Q2-2025]
+        L[6. Lifecycle 📅 K8s Operator]
+        M[7. Compliance ✅ PROD]
     end
     
     A1 & A2 & A3 & A4 & A5 --> B
@@ -927,10 +1138,10 @@ graph TB
     style G fill:#4caf50,color:#fff
     style H fill:#4caf50,color:#fff
     style I fill:#4caf50,color:#fff
-    style J fill:#ff9800,color:#fff
+    style J fill:#4caf50,color:#fff
     style K fill:#ff9800,color:#fff
     style L fill:#9e9e9e,color:#fff
-    style M fill:#9e9e9e,color:#fff
+    style M fill:#4caf50,color:#fff
 ```
 
 ### Flujo de Ejecución de Agente

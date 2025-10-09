@@ -54,12 +54,12 @@
 
     <div class="policy-box" style="background:#e8f5e9;border-left-color:#4caf50;">
       <strong>📁 Organización de Repositorios ENIS v3.0:</strong><br/>
-      <b>cloud-core/</b> (5 repos): asm-service, awe-service, cgn-service, inference-service, shif-service<br/>
+      <b>cloud-core/</b> (12 repos): asm, awe, cgn, inference, shif + <b>7 módulos NOPS</b> (observability, scorecard, billing, sandbox, resource-governance ✅, lifecycle, compliance)<br/>
       <b>cloud-ops/</b> (1 repo): cloud-infrastructure<br/>
       <b>edge/</b> (3 repos): nops-kernel, edge-agents, edge-infrastructure<br/>
       <b>platform/</b> (2 repos): agent-marketplace, enis-frontend<br/>
       <b>shared/</b> (3 repos): agent-contracts, agent-sdks, enis-infrastructure<br/>
-      <strong>Total:</strong> 14 repositorios independientes + docs/
+      <strong>Total:</strong> 21 repositorios independientes + docs/
     </div>
 
     <div class="policy-box">
@@ -116,11 +116,14 @@
         <div class="legend-section">
           <h4>Plataforma (Cloud/Servicios fuera del Kernel)</h4>
           <div class="legend-item"><div class="legend-color" style="background:#FF8C42"></div><span>Inference Service (Cloud Brain)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Observability Module</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Scorecard Module</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Billing Module</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Sandbox Module</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>Compliance Module</span></div>
+          <div class="legend-item" style="font-weight:bold;border-left:3px solid #9B59B6;padding-left:8px;margin-left:-8px"><span>7 Módulos NOPS (cloud-core):</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>1. Observability Module (37) ✅</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>2. Scorecard Module (38) ✅</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>3. Billing Module (39) ✅</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>4. Sandbox Module (40) ✅</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>5. Resource Governance (43) ✅</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>6. Lifecycle Module (42) ✅</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:#9B59B6"></div><span>7. Compliance Module (41) ✅</span></div>
           <div class="legend-item"><div class="legend-color" style="background:#34495E"></div><span>enis-contracts (Schemas/SDK)</span></div>
         </div>
 
@@ -183,9 +186,9 @@
 
         <div class="legend-note">
           ⚡ <b>Principio SLIM:</b> El NOPS Kernel mantiene SOLO el core ligero (< 100MB RAM): Agent Registry, Event Bus, Policy Engine, Routing, Security. Los módulos pesados viven en <b>cloud-core/</b> como microservicios independientes.<br/>
-          🟣 <b>Módulos Morados:</b> Los servicios morados (Observability, Scorecard, Billing, Sandbox, Compliance) son <b>microservicios en cloud-core/</b> (repos a crear post-GA). El kernel usa <b>API clients ligeros</b> con mTLS + JWT s2s. El kernel puede operar en <b>degraded mode</b> sin estos servicios (crítico para air-gapped).<br/>
+          🟣 <b>7 Módulos NOPS (cloud-core) - TODOS DOCUMENTADOS:</b> 1-Observability (37✅), 2-Scorecard (38✅), 3-Billing (39✅), 4-Sandbox (40✅), 5-Resource Governance (43✅), 6-Lifecycle (42✅), 7-Compliance (41✅). Son <b>microservicios independientes en cloud-core/</b>. El kernel usa <b>API clients ligeros</b> con mTLS + JWT s2s (5 clientes: obs, scorecard, billing, sandbox, compliance). El kernel puede operar en <b>degraded mode</b> sin estos servicios (crítico para air-gapped).<br/>
           🚀 <b>Interfaces Avanzadas:</b> Voice (S16) y XR (S17) son extensiones del Inference Service. MCP Gateway (S21) y Blockchain (S20) son extensiones del NOPS Kernel. Todas son opcionales y se activan por feature flags.<br/>
-          📦 <b>Repositorios:</b> La arquitectura se divide en <b>14 repositorios independientes</b> organizados en 5 categorías: <b>shared/</b> (base común), <b>edge/</b> (componentes cliente), <b>cloud-core/</b> (servicios principales), <b>cloud-ops/</b> (infraestructura), <b>platform/</b> (marketplace y frontend). Los repos con bordes punteados "implementan" o "despliegan" los componentes lógicos con bordes sólidos.
+          📦 <b>Repositorios:</b> La arquitectura se divide en <b>21 repositorios independientes</b> organizados en 5 categorías: <b>shared/</b> (3 repos), <b>edge/</b> (3 repos), <b>cloud-core/</b> (12 repos: 5 macro-módulos + 7 módulos NOPS), <b>cloud-ops/</b> (1 repo), <b>platform/</b> (2 repos). Los repos con bordes punteados "implementan" o "despliegan" los componentes lógicos con bordes sólidos.
         </div>
       </div>
     </div>
@@ -248,11 +251,13 @@
             { data:{ id:'awe', label:'AWE\nWorkflow Evo', layer:'cloud', color:'#3F51B5', size:80 }, position:{x:1240,y:450}},
             { data:{ id:'shif', label:'SHIF\nIntegration', layer:'cloud', color:'#009688', size:80 }, position:{x:1240,y:540}},
 
-            // Módulos fuera del kernel
+            // Módulos fuera del kernel (cloud-core services - 7 módulos NOPS)
             { data:{ id:'mod_obsv', label:'Observability\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:880,y:200}},
             { data:{ id:'mod_score', label:'Scorecard\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:990,y:170}},
             { data:{ id:'mod_bill', label:'Billing\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:1100,y:200}},
             { data:{ id:'mod_sandbox', label:'Sandbox\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:1080,y:640}},
+            { data:{ id:'mod_governance', label:'Resource\nGovernance\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:660,y:640}},
+            { data:{ id:'mod_lifecycle', label:'Lifecycle\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:800,y:640}},
             { data:{ id:'mod_compliance', label:'Compliance\nModule', layer:'cloud', color:'#9B59B6', size:72 }, position:{x:940,y:640}},
 
             // Contratos / SDK
@@ -340,6 +345,8 @@
             { data:{ source:'contracts', target:'mod_score', label:'API/Proto', security:'internal', color:'#34495E' } },
             { data:{ source:'contracts', target:'mod_bill', label:'API/Proto', security:'internal', color:'#34495E' } },
             { data:{ source:'contracts', target:'mod_sandbox', label:'API/Proto', security:'internal', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_governance', label:'API/Proto', security:'internal', color:'#34495E' } },
+            { data:{ source:'contracts', target:'mod_lifecycle', label:'API/Proto', security:'internal', color:'#34495E' } },
             { data:{ source:'contracts', target:'mod_compliance', label:'API/Proto', security:'internal', color:'#34495E' } },
 
             // Kernel -> módulos (fuera del kernel) s2s (punteado por política)
@@ -347,6 +354,8 @@
             { data:{ source:'nops', target:'mod_score', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
             { data:{ source:'nops', target:'mod_bill', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
             { data:{ source:'nops', target:'mod_sandbox', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+            { data:{ source:'nops', target:'mod_governance', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
+            { data:{ source:'nops', target:'mod_lifecycle', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
             { data:{ source:'nops', target:'mod_compliance', label:'mTLS+JWT s2s', security:'mtls', optional:'true', color:'#9B59B6' } },
 
             // Marketplace (cloud)
