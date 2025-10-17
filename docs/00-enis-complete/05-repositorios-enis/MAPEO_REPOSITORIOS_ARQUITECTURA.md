@@ -3,16 +3,16 @@
 ## 📋 Metadata
 
 ```yaml
-doc_version: "2.0"
+doc_version: "3.0"
 doc_type: "Mapping Documentation"
 doc_author: "@andaon"
 doc_date: "2025-10-09"
-doc_updated: "2025-10-09 - Agregados 7 módulos NOPS"
+doc_updated: "2025-01-09 - Agregados 3 servicios (Voice + XR + DGE)"
 dna_version: "3.0"
 compliance: "DNA_v3_compliant"
-total_repos: 21
+total_repos: 24
 categories: ["shared", "edge", "cloud-core", "cloud-ops", "platform"]
-major_update: "cloud-core expandido de 5 a 12 repos (7 módulos NOPS agregados)"
+major_update: "cloud-core expandido de 12 a 15 repos (2 interfaces avanzadas + 1 governance DGE)"
 ```
 
 ---
@@ -29,22 +29,24 @@ Este documento mapea la **organización física de repositorios** con la **arqui
 
 ---
 
-## 📊 Vista General: 21 Repositorios
+## 📊 Vista General: 24 Repositorios
 
 ```yaml
 organizacion_repositorios:
-  total: 21
+  total: 24
   
   categorias:
     shared: 3       # Base común para todos
     edge: 3         # Componentes del cliente
-    cloud_core: 12  # Servicios principales (5 macro-módulos + 7 módulos NOPS)
+    cloud_core: 15  # Servicios principales (5 macro-módulos + 7 módulos NOPS + 2 interfaces avanzadas + 1 governance)
     cloud_ops: 1    # Infraestructura y operaciones
     platform: 2     # Marketplace y frontend
     
   desglose_cloud_core:
-    macro_modulos: 5  # ASM, CGN, AWE, SHIF, Inference
-    nops_modules: 7   # Observability, Scorecard, Billing, Sandbox, Governance, Lifecycle, Compliance
+    macro_modulos: 5      # ASM, CGN, AWE, SHIF, Inference
+    nops_modules: 7       # Observability, Scorecard, Billing, Sandbox, Governance, Lifecycle, Compliance
+    interfaces_avanzadas: 2  # Voice Interface, XR Interface
+    governance: 1         # Data Governance Engine (DGE)
 ```
 
 ---
@@ -253,11 +255,12 @@ responsabilidades:
 
 ---
 
-## ☁️ CLOUD-CORE (12 repos) - Servicios Principales
+## ☁️ CLOUD-CORE (14 repos) - Servicios Principales
 
 ### 📋 Subdivisión:
 - **5 Macro-Módulos:** ASM, CGN, AWE, SHIF, Inference
 - **7 Módulos NOPS:** Observability, Scorecard, Billing, Sandbox, Resource Governance, Lifecycle, Compliance
+- **2 Interfaces Avanzadas:** Voice Interface, XR Interface
 
 ---
 
@@ -629,9 +632,82 @@ priority: "P1 - CRÍTICO (blocker para S14 Pre-GA)"
 
 ---
 
+### 🔐 GOVERNANCE (1 repo) - Data Governance Engine
+
+### 19. **data-governance-service**
+
+```yaml
+repositorio: "cloud-core/data-governance-service"
+proposito: "Motor de gobernanza de datos (DGE) para clasificación, redacción y egress control"
+tecnologias: ["Python 3.11+", "FastAPI", "Pydantic", "SpaCy", "Presidio", "Redis"]
+dependencias: ["agent-contracts", "agent-sdks", "enis-infrastructure"]
+dependientes: ["nops-kernel (Egress Guard)", "ALL services (PII redaction)"]
+
+componente_logico: "Data Governance Engine (DGE)"
+ubicacion_arquitectura: "Cloud-core governance layer + Edge Egress Guard"
+master_prompt: "25-data-governance-master-prompt.md"
+
+archivos_clave:
+  - "25-data-governance-master-prompt.md" ⭐
+  - "02-architecture-master-prompt.md"
+  - "18-security-master-prompt.md"
+  - "GDPR_COMPLIANCE_MASTER_PROMPT.md"
+
+responsabilidades:
+  - "Clasificación automática de datos (PII, Sensitive, Business)"
+  - "Redacción de PII en logs/metrics/eventos"
+  - "Egress control (fail-closed por defecto)"
+  - "Policy enforcement (región-based data residency)"
+  - "Compliance automation (GDPR/CCPA/PDPA/LGPD)"
+  - "Audit trails para data access"
+
+funcionalidades_clave:
+  clasificacion:
+    - "Regex patterns (emails, SSN, credit cards)"
+    - "NER/NLP (Named Entity Recognition con SpaCy)"
+    - "ML-based classification (custom models)"
+    - "Context-aware rules (GDPR Art. 9 sensitive data)"
+  
+  redaccion:
+    - "Masking (***-**-1234)"
+    - "Hashing (SHA-256 determinístico)"
+    - "Tokenization (preserva formato)"
+    - "Removal (purge completo)"
+  
+  egress_guard:
+    - "Lightweight client en NOPS Kernel"
+    - "Validation: datos salientes del edge"
+    - "Fail-closed: bloquea si clasificación = PII_SENSITIVE"
+    - "Audit: log de intentos bloqueados"
+
+integraciones:
+  kernel: "Egress Guard ligero (< 5MB, cache de reglas)"
+  services: "API client para redacción en logs/metrics"
+  compliance: "Reportes automáticos a Compliance Module"
+  dpia: "Input para DPIA (Data Protection Impact Assessment)"
+
+roadmap_key_milestones:
+  s_dge_1: "Clasificación regex + NER básico"
+  s_dge_2: "Redacción multi-estrategia (mask/hash/token)"
+  s_dge_3: "Egress Guard en Kernel (fail-closed)"
+  s_dge_4: "ML-based classification (custom models)"
+  s_dge_5: "GDPR automation (right-to-be-forgotten)"
+
+slos_objetivo:
+  classification_latency: "p95 < 50ms (real-time)"
+  redaction_latency: "p95 < 20ms (inline)"
+  egress_validation: "p95 < 10ms (non-blocking edge)"
+  accuracy: "> 95% (PII detection)"
+  false_positive_rate: "< 5%"
+
+priority: "P0 - CRÍTICO (compliance blocker para Enterprise Tier 3)"
+```
+
+---
+
 ## 🔧 CLOUD-OPS (1 repo) - Infraestructura
 
-### 19. **cloud-infrastructure**
+### 20. **cloud-infrastructure**
 
 ```yaml
 repositorio: "cloud-ops/cloud-infrastructure"
@@ -663,9 +739,97 @@ responsabilidades:
 
 ---
 
+### 🎤🥽 INTERFACES AVANZADAS (2 repos)
+
+#### 21. **voice-interface-service**
+
+```yaml
+repositorio: "cloud-core/voice-interface-service"
+proposito: "Procesamiento de voz en tiempo real con capacidades avanzadas"
+tecnologias: ["Python 3.11+", "FastAPI", "WebSocket", "SSE", "Whisper", "webrtcvad", "Silero"]
+dependencias: ["inference-service", "agent-contracts", "agent-sdks"]
+dependientes: ["enis-frontend", "studio-app"]
+
+componentes_logicos:
+  - "Voice Orchestrator (STT/VAD/TTS)"
+  - "Natural Prompt Controller"
+  - "Secure Voice Authenticator"
+  - "Fallback Corrector Agent"
+
+ubicacion_arquitectura: "Cloud processing layer"
+
+master_prompts_asociados:
+  primario: "26-natural-interface-master-prompt.md"
+  arquitectura: "02-architecture-master-prompt.md"
+  seguridad: "18-security-master-prompt.md"
+  performance: "19-performance-master-prompt.md"
+  monitoreo: "22-monitoring-master-prompt.md"
+
+caracteristicas_tecnicas:
+  - "TTFT < 300ms"
+  - "Bargein < 100ms"
+  - "WebSocket + SSE streaming"
+  - "Reconexión automática + resume tokens"
+  - "Múltiples providers (Whisper, Google STT, webrtcvad, Silero)"
+
+integracion_nops:
+  - "Conecta directamente con Inference Service"
+  - "NO requiere client en NOPS Kernel"
+  - "Opera como microservicio independiente"
+
+roadmap_timeline: "Q2 2025"
+```
+
+#### 22. **xr-interface-service**
+
+```yaml
+repositorio: "cloud-core/xr-interface-service"
+proposito: "Procesamiento de interfaces de realidad extendida (XR)"
+tecnologias: ["Go 1.21", "OpenXR", "WebGL", "WebRTC", "OpenXR SDK"]
+dependencias: ["inference-service", "agent-contracts", "agent-sdks"]
+dependientes: ["enis-frontend", "studio-app"]
+
+componentes_logicos:
+  - "OpenXR Adapter"
+  - "Spatial Context Manager"
+  - "Gesture Voice Router"
+  - "Avatar Copilot Controller"
+  - "Haptic Feedback System"
+
+dispositivos_soportados:
+  - "Meta Quest 3"
+  - "Apple Vision Pro"
+  - "HoloLens 2"
+
+ubicacion_arquitectura: "Cloud processing layer"
+
+master_prompts_asociados:
+  primario: "27-xr-interface-master-prompt.md"
+  arquitectura: "02-architecture-master-prompt.md"
+  seguridad: "18-security-master-prompt.md"
+  performance: "19-performance-master-prompt.md"
+  monitoreo: "22-monitoring-master-prompt.md"
+
+caracteristicas_tecnicas:
+  - "30Hz streaming con jitter < 50ms"
+  - "Fusión multimodal (mano + gaze + voz)"
+  - "Spatial mapping y gesture recognition"
+  - "Haptic feedback system"
+  - "3D rendering engines"
+
+integracion_nops:
+  - "Conecta directamente con Inference Service"
+  - "NO requiere client en NOPS Kernel"
+  - "Opera como microservicio independiente"
+
+roadmap_timeline: "Q3 2025"
+```
+
+---
+
 ## 🛒 PLATFORM (2 repos) - Marketplace y Frontend
 
-### 20. **agent-marketplace**
+### 23. **agent-marketplace**
 
 ```yaml
 repositorio: "platform/agent-marketplace"
@@ -699,7 +863,7 @@ responsabilidades:
   - "Agent discovery"
 ```
 
-### 21. **enis-frontend**
+### 24. **enis-frontend**
 
 ```yaml
 repositorio: "platform/enis-frontend"
@@ -947,18 +1111,20 @@ sprints_multi_repo:
 
 ```yaml
 resumen_ejecutivo:
-  total_repositorios: 21  # Actualizado 2025-10-09
+  total_repositorios: 24  # Actualizado 2025-01-09
   
   distribucion:
-    shared: "14% (3/21) - Base común"
-    edge: "14% (3/21) - Cliente/Edge"
-    cloud_core: "57% (12/21) - Servicios principales (5 macro + 7 NOPS)"
-    cloud_ops: "5% (1/21) - Infraestructura"
-    platform: "10% (2/21) - Marketplace y UI"
+    shared: "12.5% (3/24) - Base común"
+    edge: "12.5% (3/24) - Cliente/Edge"
+    cloud_core: "62.5% (15/24) - Servicios principales (5 macro + 7 NOPS + 2 interfaces avanzadas + 1 governance DGE)"
+    cloud_ops: "4.2% (1/24) - Infraestructura"
+    platform: "8.3% (2/24) - Marketplace y UI"
   
   cloud_core_detalle:
     macro_modulos: "5 repos (ASM, CGN, AWE, SHIF, Inference)"
     nops_modules: "7 repos (Obs, Score, Bill, Sandbox, Governance, Lifecycle, Compliance)"
+    interfaces_avanzadas: "2 repos (Voice Interface, XR Interface)"
+    governance: "1 repo (Data Governance Engine - DGE)"
   
   roadmaps_con_sprints:
     - "nops-kernel (S1-S22, incluye S13.5 SEC)"
