@@ -1,0 +1,63 @@
+﻿{
+    "language_specific":  {
+                              "typescript":  {
+                                                 "test_command":  "npm test"
+                                             },
+                              "javascript":  {
+                                                 "test_command":  "npm test"
+                                             },
+                              "python":  {
+                                             "test_command":  "python -m pytest --cov=src --cov-report=term-missing"
+                                         }
+                          },
+    "exclusions":  {
+                       "directories":  [
+                                           "node_modules",
+                                           "__pycache__",
+                                           ".git",
+                                           "venv",
+                                           "dist",
+                                           "build"
+                                       ],
+                       "files":  [
+                                     "*.md",
+                                     "*.txt",
+                                     ".gitignore",
+                                     "LICENSE"
+                                 ]
+                   },
+    "verification":  {
+                         "enable_code_standards":  true,
+                         "enable_documentation_check":  true,
+                         "enable_security_scan":  true,
+                         "enable_test_coverage":  true,
+                         "enable_dummy_detection":  true,
+                         "enable_dependency_check":  true
+                     },
+    "thresholds":  {
+                       "medium_issues_max":  10,
+                       "high_issues_max":  3,
+                       "low_issues_max":  50,
+                       "critical_issues_max":  0,
+                       "test_coverage_min_percent":  80
+                   },
+    "sprints":  {
+                    "report_pattern":  "/reports/SPRINT_{{N}}_VERIFICATION.md",
+                    "docs_pattern":  "/01-sprint/S{{N}}/*.md",
+                    "branch_pattern":  "feature/s{{N}}-*"
+                },
+    "structure":  {
+                      "docs_dir":  null,
+                      "config_dir":  "config",
+                      "src_dir":  null,
+                      "tests_dir":  null,
+                      "reports_dir":  "/reports",
+                      "scripts_dir":  "scripts"
+                  },
+    "project":  {
+                    "framework":  null,
+                    "name":  "agent-contracts",
+                    "language":  null,
+                    "type":  "api"
+                }
+}
